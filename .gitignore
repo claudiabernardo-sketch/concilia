@@ -1,0 +1,19 @@
+# Python
+__pycache__/
+*.pyc
+.venv/
+venv/
+
+# Planilhas de cliente e relatórios nunca vão para o GitHub.
+# Só os exemplos de mentira entram.
+*.xlsx
+*.xls
+*.xlsm
+*.csv
+*.pdf
+!exemplos/*.xlsx
+
+# Sistema
+.DS_Store
+Thumbs.db
+~$*
