@@ -1,0 +1,584 @@
+<!doctype html>
+<html lang="pt-BR">
+<head>
+<meta charset="utf-8">
+<meta name="viewport" content="width=device-width, initial-scale=1">
+<title>Concilia</title>
+<link rel="icon" href="data:image/svg+xml,%3Csvg xmlns='http://www.w3.org/2000/svg' viewBox='0 0 32 32'%3E%3Cdefs%3E%3ClinearGradient id='g' x1='0' y1='0' x2='1' y2='1'%3E%3Cstop offset='0' stop-color='%236366F1'/%3E%3Cstop offset='1' stop-color='%23A855F7'/%3E%3C/linearGradient%3E%3C/defs%3E%3Crect width='32' height='32' rx='9' fill='url(%23g)'/%3E%3Cpath d='M9 16.5l4.5 4.5L23 11.5' fill='none' stroke='white' stroke-width='3.2' stroke-linecap='round' stroke-linejoin='round'/%3E%3C/svg%3E">
+<style>
+  :root {
+    --indigo: #6366F1; --indigo-escuro: #4F46E5; --indigo-claro: #EEF2FF;
+    --roxo: #A855F7; --ciano: #22D3EE;
+    --tinta: #1E293B; --texto: #334155; --cinza: #64748B; --cinza-claro: #94A3B8;
+    --borda: #E2E8F0; --fundo: #F1F5F9; --cartao: #FFFFFF; --suave: #F8FAFC;
+    --verde: #059669; --verde-claro: #ECFDF5; --vermelho: #DC2626; --vermelho-claro: #FEF2F2;
+    --ambar: #D97706; --ambar-claro: #FFFBEB;
+    --sombra: 0 1px 2px rgba(15,23,42,.04), 0 4px 16px rgba(15,23,42,.06);
+    --sombra-forte: 0 10px 30px rgba(79,70,229,.18);
+    --raio: 16px;
+  }
+  * { box-sizing: border-box; }
+  html { -webkit-text-size-adjust: 100%; }
+  body {
+    margin: 0; background: var(--fundo); color: var(--texto);
+    font-family: Inter, "Segoe UI", system-ui, -apple-system, Roboto, Arial, sans-serif;
+    font-size: 15px; line-height: 1.5; -webkit-font-smoothing: antialiased;
+  }
+  button { font: inherit; cursor: pointer; }
+  .escondido { display: none !important; }
+
+  /* ---------- Topo ---------- */
+  .topo { background: var(--cartao); border-bottom: 1px solid var(--borda); position: sticky; top: 0; z-index: 5; }
+  .topo-dentro { max-width: 1160px; margin: 0 auto; padding: 14px 24px; display: flex; align-items: center; gap: 14px; }
+  .marca { display: flex; align-items: center; gap: 11px; text-decoration: none; }
+  .logo { width: 38px; height: 38px; border-radius: 11px; background: linear-gradient(135deg, var(--indigo), var(--roxo)); display: grid; place-items: center; box-shadow: 0 4px 12px rgba(99,102,241,.35); flex: none; }
+  .marca-nome { font-weight: 800; font-size: 19px; color: var(--tinta); letter-spacing: -.02em; line-height: 1.1; }
+  .marca-sub { font-size: 12.5px; color: var(--cinza); }
+  .topo-dir { margin-left: auto; display: flex; gap: 8px; align-items: center; flex-wrap: wrap; justify-content: flex-end; }
+  .selo { display: inline-flex; align-items: center; gap: 6px; font-size: 12.5px; font-weight: 600; padding: 5px 11px; border-radius: 999px; white-space: nowrap; }
+  .selo-local { background: var(--verde-claro); color: var(--verde); }
+  .selo-teste { background: var(--ambar-claro); color: var(--ambar); }
+
+  main { max-width: 1160px; margin: 0 auto; padding: 32px 24px 56px; }
+
+  /* ---------- Inicio ---------- */
+  .heroi { text-align: center; max-width: 720px; margin: 8px auto 30px; }
+  .heroi h1 { font-size: clamp(26px, 4vw, 38px); line-height: 1.15; letter-spacing: -.03em; color: var(--tinta); margin: 0 0 12px; font-weight: 800; }
+  .heroi h1 span { background: linear-gradient(90deg, var(--indigo), var(--roxo)); -webkit-background-clip: text; background-clip: text; color: transparent; }
+  .heroi p { color: var(--cinza); font-size: 17px; margin: 0; }
+
+  .soltar-grade { display: grid; grid-template-columns: 1fr 1fr; gap: 20px; max-width: 900px; margin: 0 auto; }
+  .soltar {
+    position: relative; background: var(--cartao); border: 2px dashed #CBD5E1; border-radius: var(--raio);
+    padding: 28px 24px; text-align: center; transition: border-color .15s, background .15s, box-shadow .15s, transform .15s;
+    cursor: pointer; min-height: 220px; display: flex; flex-direction: column; align-items: center; justify-content: center;
+  }
+  .soltar:hover, .soltar:focus-visible { border-color: var(--indigo); box-shadow: var(--sombra); outline: none; }
+  .soltar.arrastando { border-color: var(--indigo); background: var(--indigo-claro); transform: scale(1.01); }
+  .soltar.pronto { border-style: solid; border-color: #A7F3D0; background: linear-gradient(180deg, #FFFFFF, var(--verde-claro)); }
+  .soltar.com-erro { border-style: solid; border-color: #FECACA; background: var(--vermelho-claro); }
+  .passo { position: absolute; top: 14px; left: 16px; font-size: 12px; font-weight: 700; color: var(--indigo); background: var(--indigo-claro); border-radius: 999px; padding: 2px 10px; }
+  .soltar-icone { width: 56px; height: 56px; border-radius: 16px; display: grid; place-items: center; background: var(--indigo-claro); color: var(--indigo); margin-bottom: 14px; }
+  .soltar.pronto .soltar-icone { background: #D1FAE5; color: var(--verde); }
+  .soltar.com-erro .soltar-icone { background: #FEE2E2; color: var(--vermelho); }
+  .soltar h2 { font-size: 17px; margin: 0 0 4px; color: var(--tinta); }
+  .soltar .dica { margin: 0; color: var(--cinza); font-size: 14px; }
+  .soltar .acao-arquivo { margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--indigo); }
+  .arquivo-nome { margin-top: 12px; font-weight: 600; color: var(--tinta); word-break: break-all; font-size: 14.5px; }
+  .arquivo-info { font-size: 13px; color: var(--cinza); }
+  .soltar input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
+
+  .acoes-inicio { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 26px; }
+  .botao { display: inline-flex; align-items: center; justify-content: center; gap: 9px; border: 0; border-radius: 12px; padding: 13px 22px; font-weight: 700; font-size: 15.5px; transition: transform .1s, box-shadow .15s, background .15s, opacity .15s; text-decoration: none; }
+  .botao:active { transform: translateY(1px); }
+  .botao-principal { background: linear-gradient(135deg, var(--indigo), var(--roxo)); color: #fff; box-shadow: var(--sombra-forte); min-width: 260px; padding: 15px 28px; font-size: 16.5px; }
+  .botao-principal:hover { box-shadow: 0 14px 34px rgba(79,70,229,.28); }
+  .botao-principal:disabled { background: #CBD5E1; box-shadow: none; cursor: not-allowed; color: #F8FAFC; }
+  .botao-claro { background: var(--cartao); color: var(--tinta); border: 1px solid var(--borda); box-shadow: var(--sombra); }
+  .botao-claro:hover { border-color: #C7D2FE; color: var(--indigo-escuro); }
+  .botao-link { background: none; color: var(--indigo-escuro); padding: 6px 10px; font-weight: 600; font-size: 14.5px; }
+  .botao-link:hover { text-decoration: underline; }
+  .seguro { display: flex; align-items: center; gap: 7px; color: var(--cinza); font-size: 13.5px; }
+
+  .como-funciona { max-width: 900px; margin: 40px auto 0; display: grid; grid-template-columns: repeat(3, 1fr); gap: 16px; }
+  .como { background: var(--cartao); border: 1px solid var(--borda); border-radius: 14px; padding: 18px; }
+  .como b { display: block; color: var(--tinta); margin-bottom: 4px; font-size: 14.5px; }
+  .como span { color: var(--cinza); font-size: 13.5px; }
+  .como .num { width: 28px; height: 28px; border-radius: 9px; background: var(--indigo-claro); color: var(--indigo); font-weight: 800; display: grid; place-items: center; margin-bottom: 10px; font-size: 14px; }
+
+  /* ---------- Carregando ---------- */
+  .carregando { text-align: center; padding: 90px 0; }
+  .girando { width: 54px; height: 54px; border-radius: 50%; border: 5px solid var(--indigo-claro); border-top-color: var(--indigo); animation: gira .8s linear infinite; margin: 0 auto 18px; }
+  @keyframes gira { to { transform: rotate(360deg); } }
+  .carregando b { color: var(--tinta); font-size: 18px; display: block; }
+  .carregando span { color: var(--cinza); }
+
+  /* ---------- Erro ---------- */
+  .aviso-erro { max-width: 900px; margin: 0 auto 22px; background: var(--cartao); border: 1px solid #FECACA; border-left: 5px solid var(--vermelho); border-radius: 14px; padding: 18px 20px; box-shadow: var(--sombra); }
+  .aviso-erro h3 { margin: 0 0 6px; color: var(--vermelho); font-size: 16px; }
+  .aviso-erro p { margin: 0 0 8px; }
+  .colunas-arquivo { display: flex; flex-wrap: wrap; gap: 6px; margin-top: 8px; }
+  .colunas-arquivo span { background: var(--fundo); border: 1px solid var(--borda); border-radius: 8px; padding: 3px 9px; font-size: 13px; color: var(--tinta); }
+
+  /* ---------- Resultado ---------- */
+  .cabeca-resultado { display: flex; align-items: flex-end; justify-content: space-between; gap: 16px; flex-wrap: wrap; margin-bottom: 22px; }
+  .cabeca-resultado h1 { margin: 0; font-size: 28px; letter-spacing: -.02em; color: var(--tinta); }
+  .arquivos-usados { color: var(--cinza); font-size: 14px; margin-top: 4px; display: flex; flex-wrap: wrap; gap: 6px 14px; }
+  .arquivos-usados span { display: inline-flex; align-items: center; gap: 5px; }
+  .botoes-resultado { display: flex; gap: 10px; flex-wrap: wrap; }
+
+  .faixa-status { border-radius: var(--raio); padding: 16px 20px; display: flex; align-items: center; gap: 14px; margin-bottom: 20px; font-weight: 600; }
+  .faixa-status.bom { background: var(--verde-claro); color: #065F46; border: 1px solid #A7F3D0; }
+  .faixa-status.atencao { background: var(--ambar-claro); color: #92400E; border: 1px solid #FDE68A; }
+  .faixa-status .icone-faixa { width: 36px; height: 36px; border-radius: 10px; display: grid; place-items: center; flex: none; background: rgba(255,255,255,.7); }
+
+  .cartoes { display: grid; grid-template-columns: repeat(4, 1fr); gap: 16px; margin-bottom: 22px; }
+  .cartao { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio); padding: 18px 20px; box-shadow: var(--sombra); position: relative; overflow: hidden; }
+  .cartao .rotulo { font-size: 13px; font-weight: 600; color: var(--cinza); display: flex; align-items: center; gap: 8px; }
+  .cartao .rotulo i { width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; font-style: normal; }
+  .cartao .numero { font-size: 28px; font-weight: 800; letter-spacing: -.02em; color: var(--tinta); margin-top: 8px; line-height: 1.15; }
+  .cartao .extra { font-size: 13px; color: var(--cinza); margin-top: 4px; }
+  .cartao.destaque { background: linear-gradient(135deg, var(--indigo), var(--roxo)); border: 0; color: #fff; box-shadow: var(--sombra-forte); }
+  .cartao.destaque .rotulo, .cartao.destaque .extra { color: rgba(255,255,255,.85); }
+  .cartao.destaque .numero { color: #fff; }
+  .cartao.destaque .rotulo i { background: rgba(255,255,255,.2); }
+  .barra-progresso { height: 7px; background: var(--fundo); border-radius: 99px; margin-top: 12px; overflow: hidden; }
+  .barra-progresso div { height: 100%; background: linear-gradient(90deg, #34D399, var(--verde)); border-radius: 99px; }
+
+  .painel { background: var(--cartao); border: 1px solid var(--borda); border-radius: var(--raio); box-shadow: var(--sombra); }
+  .grade-meio { display: grid; grid-template-columns: 1.15fr 1fr; gap: 16px; margin-bottom: 22px; }
+  .painel-cabeca { padding: 18px 20px 6px; }
+  .painel-cabeca h2 { margin: 0; font-size: 16.5px; color: var(--tinta); }
+  .painel-cabeca p { margin: 2px 0 0; color: var(--cinza); font-size: 13.5px; }
+  .tipos { padding: 8px 20px 18px; }
+  .tipo-linha { display: grid; grid-template-columns: 1fr auto; gap: 4px 12px; padding: 10px 0; border-bottom: 1px solid var(--fundo); align-items: center; }
+  .tipo-linha:last-child { border-bottom: 0; }
+  .tipo-nome { font-weight: 600; color: var(--tinta); font-size: 14.5px; display: flex; align-items: center; gap: 8px; }
+  .tipo-valor { font-weight: 700; color: var(--tinta); font-variant-numeric: tabular-nums; }
+  .tipo-barra { grid-column: 1 / -1; height: 8px; background: var(--fundo); border-radius: 99px; overflow: hidden; }
+  .tipo-barra div { height: 100%; border-radius: 99px; }
+  .ponto { width: 10px; height: 10px; border-radius: 50%; flex: none; }
+  .casos { color: var(--cinza); font-weight: 500; font-size: 13px; }
+
+  .entendi { padding: 8px 20px 18px; display: grid; gap: 14px; }
+  .entendi h3 { margin: 0 0 6px; font-size: 13px; text-transform: uppercase; letter-spacing: .06em; color: var(--cinza); display: flex; justify-content: space-between; gap: 8px; }
+  .entendi h3 small { text-transform: none; letter-spacing: 0; font-weight: 500; }
+  .mapa { display: grid; grid-template-columns: auto 1fr; gap: 5px 12px; font-size: 13.5px; }
+  .mapa .campo { color: var(--tinta); font-weight: 600; white-space: nowrap; }
+  .mapa .coluna { color: var(--cinza); overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+
+  .abas { display: flex; gap: 6px; padding: 14px 16px 0; border-bottom: 1px solid var(--borda); overflow-x: auto; }
+  .aba { background: none; border: 0; padding: 10px 14px 12px; font-weight: 600; color: var(--cinza); border-bottom: 3px solid transparent; margin-bottom: -1px; white-space: nowrap; display: inline-flex; gap: 8px; align-items: center; }
+  .aba:hover { color: var(--tinta); }
+  .aba.ativa { color: var(--indigo-escuro); border-bottom-color: var(--indigo); }
+  .contador { background: var(--fundo); color: var(--cinza); border-radius: 999px; font-size: 12px; padding: 1px 8px; font-weight: 700; }
+  .aba.ativa .contador { background: var(--indigo-claro); color: var(--indigo-escuro); }
+
+  .filtros { display: flex; flex-wrap: wrap; gap: 8px; padding: 16px 20px 4px; }
+  .chip { border: 1px solid var(--borda); background: var(--cartao); color: var(--texto); border-radius: 999px; padding: 6px 12px; font-size: 13px; font-weight: 600; display: inline-flex; align-items: center; gap: 7px; }
+  .chip:hover { border-color: #C7D2FE; }
+  .chip.ativo { background: var(--tinta); color: #fff; border-color: var(--tinta); }
+
+  .lista { padding: 8px 12px 14px; }
+  .problema { display: grid; grid-template-columns: auto 1fr auto; gap: 14px; padding: 14px 10px; border-bottom: 1px solid var(--fundo); align-items: start; }
+  .problema:last-child { border-bottom: 0; }
+  .problema-icone { width: 40px; height: 40px; border-radius: 12px; display: grid; place-items: center; flex: none; }
+  .problema-titulo { font-weight: 700; color: var(--tinta); display: flex; flex-wrap: wrap; gap: 8px; align-items: center; }
+  .problema-obs { color: var(--texto); font-size: 14px; margin-top: 3px; }
+  .problema-meta { color: var(--cinza); font-size: 13px; margin-top: 6px; display: flex; flex-wrap: wrap; gap: 4px 14px; }
+  .problema-valor { text-align: right; font-variant-numeric: tabular-nums; white-space: nowrap; }
+  .problema-valor b { font-size: 17px; display: block; }
+  .problema-valor span { font-size: 12.5px; color: var(--cinza); }
+  .negativo { color: var(--vermelho); }
+  .positivo { color: var(--verde); }
+  .gravidade { font-size: 11.5px; font-weight: 700; border-radius: 999px; padding: 2px 9px; text-transform: uppercase; letter-spacing: .04em; }
+  .g-alta { background: var(--vermelho-claro); color: var(--vermelho); }
+  .g-media { background: var(--ambar-claro); color: var(--ambar); }
+  .g-baixa { background: var(--fundo); color: var(--cinza); }
+
+  .tabela-caixa { overflow-x: auto; padding: 6px 8px 12px; }
+  table { width: 100%; border-collapse: collapse; font-size: 14px; }
+  th { text-align: left; color: var(--cinza); font-weight: 600; font-size: 12px; text-transform: uppercase; letter-spacing: .04em; padding: 12px 10px; border-bottom: 1px solid var(--borda); white-space: nowrap; }
+  td { padding: 11px 10px; border-bottom: 1px solid var(--fundo); color: var(--tinta); white-space: nowrap; }
+  td.quebra { white-space: normal; min-width: 150px; }
+  td.num, th.num { text-align: right; font-variant-numeric: tabular-nums; }
+  tr:hover td { background: var(--suave); }
+  .como-casou { display: inline-flex; align-items: center; gap: 6px; color: var(--verde); font-weight: 600; font-size: 13px; background: var(--verde-claro); padding: 3px 9px; border-radius: 999px; }
+
+  .vazio { text-align: center; padding: 44px 20px; color: var(--cinza); }
+  .vazio b { display: block; color: var(--tinta); font-size: 17px; margin: 10px 0 4px; }
+
+  .rodape { text-align: center; color: var(--cinza-claro); font-size: 13px; margin-top: 34px; }
+
+  @media (max-width: 900px) {
+    .cartoes { grid-template-columns: 1fr 1fr; }
+    .grade-meio { grid-template-columns: 1fr; }
+  }
+  @media (max-width: 640px) {
+    main { padding: 22px 16px 40px; }
+    .topo-dentro { padding: 12px 16px; }
+    .selo-local { display: none; }
+    .soltar-grade, .como-funciona { grid-template-columns: 1fr; }
+    .cartoes { grid-template-columns: 1fr; }
+    .problema { grid-template-columns: auto 1fr; }
+    .problema-valor { grid-column: 2; text-align: left; }
+    .botao-principal { min-width: 0; width: 100%; }
+  }
+</style>
+</head>
+<body>
+<header class="topo">
+  <div class="topo-dentro">
+    <div class="marca">
+      <div class="logo"><svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="#fff" stroke-width="3" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg></div>
+      <div><div class="marca-nome">Concilia</div><div class="marca-sub">Conciliação de cartão</div></div>
+    </div>
+    <div class="topo-dir">
+      <span class="selo selo-local"><svg width="14" height="14" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><rect x="4" y="11" width="16" height="10" rx="2"/><path d="M8 11V7a4 4 0 0 1 8 0v4"/></svg>Só no seu computador</span>
+      <span class="selo selo-teste">Versão de teste</span>
+    </div>
+  </div>
+</header>
+
+<main>
+  <!-- Inicio -->
+  <section id="inicio">
+    <div class="heroi">
+      <h1>A maquininha pagou <span>o que prometeu?</span></h1>
+      <p>Arraste a agenda de recebíveis e o extrato do banco. Em segundos você vê o que bateu e o que precisa da sua atenção.</p>
+    </div>
+
+    <div id="erro" class="aviso-erro escondido" role="alert"></div>
+
+    <div class="soltar-grade">
+      <label class="soltar" id="soltar-agenda" tabindex="0">
+        <span class="passo">1</span>
+        <div class="soltar-icone"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/></svg></div>
+        <h2>Agenda de recebíveis</h2>
+        <p class="dica">Excel ou CSV baixado no portal da maquininha</p>
+        <div class="vazio-arquivo"><div class="acao-arquivo">Arraste aqui ou clique para escolher</div></div>
+        <div class="tem-arquivo escondido"><div class="arquivo-nome"></div><div class="arquivo-info"></div></div>
+        <input type="file" accept=".xlsx,.xlsm,.csv,.txt" aria-label="Escolher a agenda de recebíveis">
+      </label>
+
+      <label class="soltar" id="soltar-extrato" tabindex="0">
+        <span class="passo">2</span>
+        <div class="soltar-icone"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10M19 21V10M9.5 21v-7M14.5 21v-7M2 10l10-6 10 6"/></svg></div>
+        <h2>Extrato do banco</h2>
+        <p class="dica">Excel ou CSV do mesmo período</p>
+        <div class="vazio-arquivo"><div class="acao-arquivo">Arraste aqui ou clique para escolher</div></div>
+        <div class="tem-arquivo escondido"><div class="arquivo-nome"></div><div class="arquivo-info"></div></div>
+        <input type="file" accept=".xlsx,.xlsm,.csv,.txt" aria-label="Escolher o extrato do banco">
+      </label>
+    </div>
+
+    <div class="acoes-inicio">
+      <button class="botao botao-principal" id="botao-conciliar" disabled>
+        <svg width="20" height="20" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.6" stroke-linecap="round" stroke-linejoin="round"><path d="M5 12.5l4.5 4.5L19 7.5"/></svg>
+        Conciliar
+      </button>
+      <button class="botao botao-link" id="botao-exemplo">Primeira vez? Veja com um exemplo de mentira</button>
+      <div class="seguro"><svg width="15" height="15" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round"><path d="M12 22s8-4 8-10V5l-8-3-8 3v7c0 6 8 10 8 10z"/></svg>Seus arquivos não saem deste computador.</div>
+    </div>
+
+    <div class="como-funciona">
+      <div class="como"><div class="num">1</div><b>Total do dia</b><span>Procura no banco um depósito com a soma do dia.</span></div>
+      <div class="como"><div class="num">2</div><b>Débito e crédito</b><span>Se não achar, separa por modalidade, por bandeira e venda por venda.</span></div>
+      <div class="como"><div class="num">3</div><b>Sem chute</b><span>PIX e TED de cliente nunca são casados. Regra fixa, sem IA.</span></div>
+    </div>
+  </section>
+
+  <!-- Carregando -->
+  <section id="carregando" class="carregando escondido" aria-live="polite">
+    <div class="girando"></div>
+    <b>Conciliando…</b>
+    <span>Lendo as planilhas e procurando cada depósito</span>
+  </section>
+
+  <!-- Resultado -->
+  <section id="resultado" class="escondido">
+    <div class="cabeca-resultado">
+      <div>
+        <h1>Resultado da conciliação</h1>
+        <div class="arquivos-usados" id="arquivos-usados"></div>
+      </div>
+      <div class="botoes-resultado">
+        <button class="botao botao-claro" id="botao-nova">
+          <svg width="17" height="17" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.3" stroke-linecap="round" stroke-linejoin="round"><path d="M3 12a9 9 0 1 0 3-6.7L3 8"/><path d="M3 3v5h5"/></svg>
+          Nova conciliação
+        </button>
+        <a class="botao botao-principal" id="botao-excel" href="#" style="min-width:0">
+          <svg width="18" height="18" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.4" stroke-linecap="round" stroke-linejoin="round"><path d="M12 3v12M7 10l5 5 5-5M5 21h14"/></svg>
+          Baixar relatório em Excel
+        </a>
+      </div>
+    </div>
+
+    <div id="faixa-status" class="faixa-status"></div>
+
+    <div class="cartoes" id="cartoes"></div>
+
+    <div class="grade-meio">
+      <div class="painel">
+        <div class="painel-cabeca"><h2>Onde está o dinheiro em jogo</h2><p>Por tipo de problema, do maior para o menor</p></div>
+        <div class="tipos" id="tipos"></div>
+      </div>
+      <div class="painel">
+        <div class="painel-cabeca"><h2>O que eu entendi dos arquivos</h2><p>Confira se cada informação veio da coluna certa</p></div>
+        <div class="entendi" id="entendi"></div>
+      </div>
+    </div>
+
+    <div class="painel">
+      <div class="abas" role="tablist">
+        <button class="aba ativa" data-aba="atencao" role="tab">Precisam de atenção <span class="contador" id="conta-atencao">0</span></button>
+        <button class="aba" data-aba="conciliados" role="tab">Conciliados <span class="contador" id="conta-conciliados">0</span></button>
+      </div>
+      <div id="aba-atencao">
+        <div class="filtros" id="filtros"></div>
+        <div class="lista" id="lista-problemas"></div>
+      </div>
+      <div id="aba-conciliados" class="escondido">
+        <div class="tabela-caixa" id="tabela-conciliados"></div>
+      </div>
+    </div>
+  </section>
+
+  <p class="rodape">Concilia · regra fixa, sem IA: o mesmo arquivo dá sempre o mesmo resultado · Feito por Cláudia Bernardo</p>
+</main>
+
+<script>
+(function () {
+  "use strict";
+  var CHAVE = "__CHAVE__";
+  var arquivos = { agenda: null, extrato: null };
+  var dados = null;
+  var filtroAtual = "todos";
+
+  var CORES = {
+    nao_recebido: { cor: "#DC2626", fundo: "#FEF2F2" },
+    valor_divergente: { cor: "#D97706", fundo: "#FFFBEB" },
+    nao_identificado: { cor: "#6366F1", fundo: "#EEF2FF" },
+    chargeback: { cor: "#BE123C", fundo: "#FFF1F2" },
+    taxa_maior: { cor: "#A855F7", fundo: "#FAF5FF" },
+    taxa_menor: { cor: "#64748B", fundo: "#F1F5F9" },
+    recebido_atrasado: { cor: "#0891B2", fundo: "#ECFEFF" }
+  };
+  var ICONES = {
+    nao_recebido: '<path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/>',
+    valor_divergente: '<path d="M4 7h16M4 17h16M9 3l-2 18M17 3l-2 18"/>',
+    nao_identificado: '<circle cx="12" cy="12" r="9"/><path d="M9.5 9.5a2.5 2.5 0 1 1 3.5 2.3c-.6.3-1 .9-1 1.6v.6M12 17.5v.01"/>',
+    chargeback: '<path d="M9 14L4 9l5-5"/><path d="M4 9h11a5 5 0 0 1 0 10h-3"/>',
+    taxa_maior: '<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+    taxa_menor: '<path d="M19 5L5 19"/><circle cx="7" cy="7" r="2.5"/><circle cx="17" cy="17" r="2.5"/>',
+    recebido_atrasado: '<circle cx="12" cy="12" r="9"/><path d="M12 7v5l3 2"/>'
+  };
+
+  function $(id) { return document.getElementById(id); }
+  function esc(t) {
+    return String(t == null ? "" : t).replace(/[&<>"']/g, function (c) {
+      return { "&": "&amp;", "<": "&lt;", ">": "&gt;", '"': "&quot;", "'": "&#39;" }[c];
+    });
+  }
+  var fmt = new Intl.NumberFormat("pt-BR", { style: "currency", currency: "BRL" });
+  function reais(v) { return v == null ? "-" : fmt.format(Number(v)); }
+  function tamanho(b) { return b < 1024 * 1024 ? Math.max(1, Math.round(b / 1024)) + " KB" : (b / 1024 / 1024).toFixed(1).replace(".", ",") + " MB"; }
+  function svg(caminho, tam) {
+    return '<svg width="' + (tam || 20) + '" height="' + (tam || 20) + '" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2.2" stroke-linecap="round" stroke-linejoin="round">' + caminho + "</svg>";
+  }
+  function mostrar(qual) {
+    ["inicio", "carregando", "resultado"].forEach(function (s) { $(s).classList.toggle("escondido", s !== qual); });
+    window.scrollTo({ top: 0, behavior: "smooth" });
+  }
+
+  // ---------- Escolher arquivos ----------
+  function prepararCaixa(campo) {
+    var caixa = $("soltar-" + campo);
+    var entrada = caixa.querySelector("input");
+    entrada.addEventListener("change", function () { if (entrada.files[0]) escolher(campo, entrada.files[0]); });
+    caixa.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); entrada.click(); } });
+    ["dragenter", "dragover"].forEach(function (ev) {
+      caixa.addEventListener(ev, function (e) { e.preventDefault(); caixa.classList.add("arrastando"); });
+    });
+    ["dragleave", "drop"].forEach(function (ev) {
+      caixa.addEventListener(ev, function (e) { e.preventDefault(); caixa.classList.remove("arrastando"); });
+    });
+    caixa.addEventListener("drop", function (e) {
+      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
+      if (f) escolher(campo, f);
+    });
+  }
+  function escolher(campo, arquivo) {
+    arquivos[campo] = arquivo;
+    var caixa = $("soltar-" + campo);
+    caixa.classList.add("pronto");
+    caixa.classList.remove("com-erro");
+    caixa.querySelector(".vazio-arquivo").classList.add("escondido");
+    caixa.querySelector(".tem-arquivo").classList.remove("escondido");
+    caixa.querySelector(".arquivo-nome").textContent = arquivo.name;
+    caixa.querySelector(".arquivo-info").textContent = tamanho(arquivo.size) + " · clique para trocar";
+    caixa.querySelector(".soltar-icone").innerHTML = svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 28);
+    $("botao-conciliar").disabled = !(arquivos.agenda && arquivos.extrato);
+    $("erro").classList.add("escondido");
+  }
+  window.addEventListener("dragover", function (e) { e.preventDefault(); });
+  window.addEventListener("drop", function (e) { e.preventDefault(); });
+
+  function lerBase64(arquivo) {
+    return new Promise(function (ok, falha) {
+      var leitor = new FileReader();
+      leitor.onload = function () { ok(String(leitor.result).split(",")[1] || ""); };
+      leitor.onerror = function () { falha(new Error("Não consegui ler " + arquivo.name)); };
+      leitor.readAsDataURL(arquivo);
+    });
+  }
+
+  // ---------- Conciliar ----------
+  function enviar(caminho, corpo) {
+    mostrar("carregando");
+    var inicio = Date.now();
+    return fetch(caminho, {
+      method: "POST",
+      headers: { "Content-Type": "application/json", "X-Concilia-Chave": CHAVE },
+      body: JSON.stringify(corpo)
+    }).then(function (r) {
+      return r.json().catch(function () { return { ok: false, erro: "Resposta inesperada do Concilia." }; });
+    }).then(function (res) {
+      var espera = Math.max(0, 500 - (Date.now() - inicio));
+      setTimeout(function () { res.ok ? mostrarResultado(res) : mostrarErro(res); }, espera);
+    }).catch(function () {
+      mostrarErro({ erro: "Perdi a conexão com o Concilia. A janela preta dele foi fechada? Abra o Concilia de novo." });
+    });
+  }
+  $("botao-conciliar").addEventListener("click", function () {
+    Promise.all([lerBase64(arquivos.agenda), lerBase64(arquivos.extrato)]).then(function (c) {
+      enviar("/conciliar", {
+        agenda: { nome: arquivos.agenda.name, conteudo: c[0] },
+        extrato: { nome: arquivos.extrato.name, conteudo: c[1] }
+      });
+    }).catch(function (e) { mostrarErro({ erro: e.message }); });
+  });
+  $("botao-exemplo").addEventListener("click", function () { enviar("/exemplo", {}); });
+  $("botao-nova").addEventListener("click", function () { mostrar("inicio"); });
+
+  function mostrarErro(res) {
+    mostrar("inicio");
+    var caixa = $("erro");
+    var html = "<h3>" + esc(res.rotulo ? "Problema na " + res.rotulo.toLowerCase().replace("extrato bancário", "planilha do extrato") : "Não consegui conciliar") + "</h3><p>" + esc(res.erro) + "</p>";
+    if (res.colunas && res.colunas.length) {
+      html += "<p>Renomeie a coluna certa na planilha para <b>" + esc((res.faltando || []).join(" e ")) + "</b> e tente de novo. As colunas que o arquivo tem são:</p><div class='colunas-arquivo'>" +
+        res.colunas.map(function (c) { return "<span>" + esc(c) + "</span>"; }).join("") + "</div>";
+    }
+    caixa.innerHTML = html;
+    caixa.classList.remove("escondido");
+    if (res.arquivo) {
+      var campo = res.arquivo === "recebiveis" ? "agenda" : "extrato";
+      var caixaErro = $("soltar-" + campo);
+      caixaErro.classList.add("com-erro");
+      caixaErro.classList.remove("pronto");
+      caixaErro.querySelector(".soltar-icone").innerHTML = svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/>', 28);
+    }
+  }
+
+  // ---------- Resultado ----------
+  function mostrarResultado(d) {
+    dados = d;
+    filtroAtual = "todos";
+    var r = d.resumo;
+    $("botao-excel").href = d.relatorio.url;
+    $("botao-excel").setAttribute("download", d.relatorio.nome);
+
+    $("arquivos-usados").innerHTML =
+      "<span>" + svg('<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>', 15) + esc(d.arquivos.agenda.nome) + "</span>" +
+      "<span>" + svg('<path d="M3 21h18M5 21V10M19 21V10M2 10l10-6 10 6"/>', 15) + esc(d.arquivos.extrato.nome) + "</span>";
+
+    var faixa = $("faixa-status");
+    if (r.atencao === 0) {
+      faixa.className = "faixa-status bom";
+      faixa.innerHTML = '<div class="icone-faixa">' + svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>') + "</div>Tudo bateu. Todos os recebíveis encontraram o seu depósito no banco.";
+    } else {
+      faixa.className = "faixa-status atencao";
+      faixa.innerHTML = '<div class="icone-faixa">' + svg('<path d="M12 8v5M12 16.5v.5"/><path d="M10.3 3.9L2 18a2 2 0 0 0 1.7 3h16.6a2 2 0 0 0 1.7-3L13.7 3.9a2 2 0 0 0-3.4 0z"/>') + "</div>" +
+        r.atencao + (r.atencao === 1 ? " ponto precisa" : " pontos precisam") + " da sua atenção, somando " + reais(r.valor_em_jogo) + ". Comece pelos de gravidade alta.";
+    }
+
+    var pct = r.recebiveis ? Math.round(r.conciliados / r.recebiveis * 100) : 0;
+    $("cartoes").innerHTML =
+      cartao("Conciliados", r.conciliados + ' <span style="font-size:16px;color:#94A3B8;font-weight:600">de ' + r.recebiveis + "</span>",
+        pct + "% dos recebíveis", "#059669", "#ECFDF5", '<path d="M5 12.5l4.5 4.5L19 7.5"/>', '<div class="barra-progresso"><div style="width:' + pct + '%"></div></div>') +
+      cartao("Valor conciliado", reais(r.valor_conciliado), "bateu com o banco", "#059669", "#ECFDF5", '<path d="M12 2v20M17 6H9.5a3.5 3.5 0 0 0 0 7h5a3.5 3.5 0 0 1 0 7H6"/>') +
+      cartao("Precisam de atenção", String(r.atencao), r.atencao ? "veja a lista abaixo" : "nada para olhar", r.atencao ? "#DC2626" : "#059669", r.atencao ? "#FEF2F2" : "#ECFDF5", '<path d="M12 8v5M12 16.5v.5"/><circle cx="12" cy="12" r="9"/>') +
+      cartao("Dinheiro em jogo", reais(r.valor_em_jogo), r.recebiveis + " recebíveis · " + r.movimentos + " lançamentos", null, null, '<path d="M3 3v18h18"/><path d="M7 15l4-4 3 3 5-6"/>', "", true);
+
+    var maior = 0;
+    r.por_tipo.forEach(function (t) { maior = Math.max(maior, Number(t.valor)); });
+    $("tipos").innerHTML = r.por_tipo.length ? r.por_tipo.map(function (t) {
+      var c = CORES[t.tipo] || CORES.taxa_menor;
+      var w = maior ? Math.max(4, Number(t.valor) / maior * 100) : 0;
+      return '<div class="tipo-linha"><div class="tipo-nome"><span class="ponto" style="background:' + c.cor + '"></span>' + esc(t.nome) +
+        ' <span class="casos">' + t.quantidade + (t.quantidade === 1 ? " caso" : " casos") + '</span></div><div class="tipo-valor">' + reais(t.valor) +
+        '</div><div class="tipo-barra"><div style="width:' + w + "%;background:" + c.cor + '"></div></div></div>';
+    }).join("") : '<div class="vazio">' + svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 30) + "<b>Nenhum dinheiro em jogo</b>Tudo bateu.</div>";
+
+    $("entendi").innerHTML = mapa("Agenda de recebíveis", d.arquivos.agenda) + mapa("Extrato do banco", d.arquivos.extrato);
+
+    $("conta-atencao").textContent = d.divergencias.length;
+    $("conta-conciliados").textContent = d.conciliados.length;
+    desenharFiltros();
+    desenharProblemas();
+    desenharConciliados();
+    trocarAba("atencao");
+    mostrar("resultado");
+  }
+
+  function cartao(rotulo, numero, extra, cor, fundo, icone, depois, destaque) {
+    var i = destaque ? '<i>' + svg(icone, 15) + "</i>" : '<i style="background:' + fundo + ";color:" + cor + '">' + svg(icone, 15) + "</i>";
+    return '<div class="cartao' + (destaque ? " destaque" : "") + '"><div class="rotulo">' + i + esc(rotulo) + '</div><div class="numero">' + numero +
+      '</div><div class="extra">' + esc(extra) + "</div>" + (depois || "") + "</div>";
+  }
+  function mapa(titulo, info) {
+    var ign = info.ignoradas ? ", " + info.ignoradas + " ignoradas" : "";
+    return "<div><h3>" + esc(titulo) + "<small>" + info.linhas + " linhas lidas" + ign + "</small></h3><div class='mapa'>" +
+      info.colunas_tela.map(function (p) {
+        return "<span class='campo'>" + esc(p[0]) + "</span><span class='coluna' title='" + esc(p[1]) + "'>← " + esc(p[1]) + "</span>";
+      }).join("") + "</div></div>";
+  }
+  function desenharFiltros() {
+    var r = dados.resumo;
+    if (!dados.divergencias.length) { $("filtros").innerHTML = ""; return; }
+    var chips = [{ tipo: "todos", nome: "Todos", quantidade: dados.divergencias.length }].concat(r.por_tipo);
+    $("filtros").innerHTML = chips.map(function (t) {
+      var c = CORES[t.tipo];
+      return '<button class="chip' + (filtroAtual === t.tipo ? " ativo" : "") + '" data-tipo="' + esc(t.tipo) + '">' +
+        (c ? '<span class="ponto" style="background:' + c.cor + '"></span>' : "") + esc(t.nome) + " · " + t.quantidade + "</button>";
+    }).join("");
+    Array.prototype.forEach.call($("filtros").querySelectorAll(".chip"), function (b) {
+      b.addEventListener("click", function () { filtroAtual = b.getAttribute("data-tipo"); desenharFiltros(); desenharProblemas(); });
+    });
+  }
+  function desenharProblemas() {
+    var lista = dados.divergencias.filter(function (d) { return filtroAtual === "todos" || d.tipo === filtroAtual; });
+    if (!lista.length) {
+      $("lista-problemas").innerHTML = '<div class="vazio"><span style="color:#059669">' + svg('<circle cx="12" cy="12" r="9"/><path d="M8 12.5l3 3 5-6"/>', 36) + "</span><b>Nada para olhar</b>Todos os recebíveis encontraram o seu depósito.</div>";
+      return;
+    }
+    $("lista-problemas").innerHTML = lista.map(function (d) {
+      var c = CORES[d.tipo] || CORES.taxa_menor;
+      var dif = Number(d.diferenca);
+      var meta = ["Data " + esc(d.data)];
+      if (d.esperado != null) meta.push("Esperado " + reais(d.esperado));
+      if (d.encontrado != null) meta.push("Encontrado " + reais(d.encontrado));
+      return '<div class="problema"><div class="problema-icone" style="background:' + c.fundo + ";color:" + c.cor + '">' + svg(ICONES[d.tipo] || ICONES.nao_recebido) +
+        '</div><div><div class="problema-titulo">' + esc(d.nome) + ' <span class="gravidade g-' + esc(d.gravidade) + '">' + esc(d.gravidade_nome) +
+        '</span></div><div class="problema-obs">' + esc(d.observacao) + '</div><div class="problema-meta">' + meta.map(function (m) { return "<span>" + m + "</span>"; }).join("") +
+        '</div></div><div class="problema-valor"><b class="' + (dif < 0 ? "negativo" : "positivo") + '">' + (dif > 0 ? "+" : "") + reais(d.diferenca) +
+        "</b><span>diferença</span></div></div>";
+    }).join("");
+  }
+  function desenharConciliados() {
+    if (!dados.conciliados.length) {
+      $("tabela-conciliados").innerHTML = '<div class="vazio"><b>Nada foi conciliado</b>Confira se a agenda e o extrato são do mesmo período e da mesma conta.</div>';
+      return;
+    }
+    $("tabela-conciliados").innerHTML = "<table><thead><tr><th>Data prevista</th><th>Modalidade</th><th>Bandeira</th><th class='num'>Valor líquido</th><th>Caiu no banco</th><th class='num'>Depósito</th><th>Histórico do banco</th><th>Como casou</th></tr></thead><tbody>" +
+      dados.conciliados.map(function (c) {
+        return "<tr><td>" + esc(c.data_prevista) + "</td><td>" + esc(c.modalidade || "-") + "</td><td>" + esc(c.bandeira || "-") + "</td><td class='num'>" + reais(c.valor_liquido) +
+          "</td><td>" + esc(c.data_banco) + "</td><td class='num'>" + reais(c.valor_deposito) + "</td><td class='quebra'>" + esc(c.historico || "-") + "</td><td><span class='como-casou'>" +
+          svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 13) + esc(c.como) + "</span></td></tr>";
+      }).join("") + "</tbody></table>";
+  }
+  function trocarAba(qual) {
+    Array.prototype.forEach.call(document.querySelectorAll(".aba"), function (b) { b.classList.toggle("ativa", b.getAttribute("data-aba") === qual); });
+    $("aba-atencao").classList.toggle("escondido", qual !== "atencao");
+    $("aba-conciliados").classList.toggle("escondido", qual !== "conciliados");
+  }
+  Array.prototype.forEach.call(document.querySelectorAll(".aba"), function (b) {
+    b.addEventListener("click", function () { trocarAba(b.getAttribute("data-aba")); });
+  });
+
+  prepararCaixa("agenda");
+  prepararCaixa("extrato");
+})();
+</script>
+</body>
+</html>

@@ -4,6 +4,8 @@ Este projeto concilia a agenda de recebíveis da maquininha com o extrato do ban
 
 Para instalar pelo link, siga a seção "Para o agente: instalar pelo link" do `README.md`.
 
+Para abrir a tela ("Abra o Concilia"): rode `python abrir_concilia.py` em segundo plano. Ele fica rodando e abre o navegador em `http://127.0.0.1:8765/`. A tela só aceita pedidos do próprio computador e com a chave que ela mesma gera; não desligue essas proteções.
+
 ## Regras que não mudam
 
 1. **Nunca invente coluna.** Se o `conciliar.py` disser que não achou uma coluna obrigatória (data prevista e valor líquido na agenda, data e valor no extrato), mostre ao usuário as colunas que o arquivo tem e pergunte qual é qual. Não chute, não crie coluna, não preencha valor que não está no arquivo. Renomear o cabeçalho numa **cópia** do arquivo, depois que o usuário confirmar qual coluna é, pode.
@@ -21,5 +23,6 @@ Lote do dia inteiro, depois o dia separado por modalidade e por bandeira, depois
 - Rode `python -m testes.testar` antes e depois. Todos os testes têm que passar.
 - Toda regra nova ganha um teste em `testes/` que descreve a situação real em português.
 - Dinheiro sempre com `Decimal` (veja `concilia/formato.py`), nunca `float`.
-- Mensagens na tela sem acento (o terminal do Windows às vezes quebra acento).
+- Mensagens no terminal sem acento (o terminal do Windows às vezes quebra acento). Na tela do navegador e no Excel, com acento.
+- A tela (`concilia/tela/index.html`) e o comando usam o mesmo `concilia/servico.py`: mudou um, os dois mudam juntos.
 - Se o banco do usuário mostra o depósito da adquirente com um nome que o sistema não conhece, acrescente o nome em `ADQUIRENTES` no `motor.py`, com teste, usando o texto exato do extrato que o usuário mostrou.

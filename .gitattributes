@@ -1,2 +1,4 @@
 * text=auto
 *.xlsx binary
+*.bat text eol=crlf
+*.command text eol=lf

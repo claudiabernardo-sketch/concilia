@@ -204,7 +204,7 @@ def _():
     igual(sorted(d["tipo"] for d in r["divergencias"]),
           ["nao_identificado", "nao_recebido"], "tipos")
     obs = [d for d in r["divergencias"] if d["tipo"] == "nao_identificado"][0]["observacao"]
-    igual("parece de cliente" in obs, True, "observacao explica o motivo")
+    igual("dinheiro de cliente" in obs, True, "observacao explica o motivo")
 
 
 @teste(G8, "TED de cliente com o valor do lote do dia nao concilia")

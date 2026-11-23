@@ -241,7 +241,7 @@ def conciliar_recebiveis(recebiveis, movimentos, hoje=None, parametros=None):
                 "valor_encontrado": ZERO,
                 "diferenca": arredondar(-r["valor_liquido"]),
                 "gravidade": "alta",
-                "observacao": "Chargeback. Confira se o valor foi debitado em outro lancamento.",
+                "observacao": "Chargeback. Confira se o valor foi debitado em outro lançamento.",
             })
             continue
         if situacao == "cancelado":
@@ -313,8 +313,8 @@ def conciliar_recebiveis(recebiveis, movimentos, hoje=None, parametros=None):
             "diferenca": arredondar(arredondar(aproximado["valor"]) - soma),
             "gravidade": "alta",
             "observacao": (
-                f"Deposito de {data_br(data_prevista)} veio diferente do previsto. "
-                f"Envolve {len(lote)} parcela(s)."
+                f"Depósito de {data_br(data_prevista)} veio diferente do previsto. "
+                f"Envolve {len(lote)} {'venda' if len(lote) == 1 else 'vendas'}."
             ),
         })
         return True
@@ -391,7 +391,7 @@ def conciliar_recebiveis(recebiveis, movimentos, hoje=None, parametros=None):
             "valor_encontrado": ZERO,
             "diferenca": arredondar(-r["valor_liquido"]),
             "gravidade": "alta",
-            "observacao": f"Previsto pra {data_br(r['data_prevista'])}, {atraso} dias em atraso.",
+            "observacao": f"Previsto para {data_br(r['data_prevista'])}, {atraso} dias em atraso.",
         })
 
     # Dinheiro que entrou e ninguem sabe de onde veio.
@@ -400,13 +400,13 @@ def conciliar_recebiveis(recebiveis, movimentos, hoje=None, parametros=None):
             continue
         descricao = m.get("descricao")
         if m["fora_da_maquininha"]:
-            observacao = (f"Entrada que parece de cliente (PIX, TED, transferencia), nao da "
+            observacao = (f"Parece dinheiro de cliente (PIX, TED, transferência), não da "
                           f"maquininha: {descricao}. O sistema nunca casa esse tipo de "
-                          "entrada com a agenda, confira na mao.")
+                          "entrada com a agenda. Confira na mão.")
         elif descricao:
-            observacao = f"Entrada sem recebivel correspondente: {descricao}"
+            observacao = f"Entrada sem recebível correspondente: {descricao}"
         else:
-            observacao = "Entrada sem recebivel correspondente."
+            observacao = "Entrada sem recebível correspondente."
         divergencias.append({
             "tipo": "nao_identificado",
             "referencia_tipo": "movimento",

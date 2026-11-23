@@ -1,6 +1,6 @@
 # Concilia, conciliadora de cartão
 
-> **Versão de teste.** O Concilia está sendo testado pelas alunas da Cláudia com arquivos reais de várias maquininhas. Confira sempre o relatório antes de mandar para o cliente, e conte o que aconteceu no formulário de teste.
+> **Versão de teste.** O Concilia está sendo testado pelas alunas da Cláudia com arquivos reais de várias maquininhas. Confira sempre o relatório antes de mandar para o cliente, e conte para a Cláudia o que aconteceu.
 
 Confere se o dinheiro que a maquininha prometeu pagar caiu mesmo no banco.
 
@@ -24,22 +24,31 @@ O agente baixa o projeto, instala o que falta e roda um exemplo para mostrar que
 
 ## Como usar no dia a dia
 
-1. Baixe a agenda de recebíveis do cliente no portal da adquirente (Excel ou CSV).
+1. Baixe a agenda de recebíveis do cliente no portal da maquininha (Excel ou CSV).
 2. Baixe o extrato do banco do mesmo período (Excel ou CSV).
-3. Coloque os dois arquivos na pasta do Concilia. Use um **apelido** do cliente no nome, nunca o nome verdadeiro. Exemplo: `agenda-padaria-outubro.xlsx` e `extrato-padaria-outubro.xlsx`.
-4. Peça ao agente:
+3. Salve os dois com um **apelido** do cliente no nome, nunca o nome verdadeiro. Exemplo: `agenda-padaria-outubro.xlsx` e `extrato-padaria-outubro.xlsx`.
+4. Abra o Concilia. Peça ao agente:
+
+```
+Abra o Concilia
+```
+
+Ou dê dois cliques no arquivo **Abrir Concilia** que está na pasta (no Mac, **Abrir Concilia.command**).
+
+5. Abre uma tela no navegador. **Arraste a agenda** para o quadro 1, **o extrato** para o quadro 2 e clique em **Conciliar**.
+6. Na hora aparece o resultado: quanto bateu, o que precisa de atenção e onde está o dinheiro em jogo. Clique em **Baixar relatório em Excel** para guardar ou mandar ao cliente.
+
+Na primeira vez, clique em **Veja com um exemplo de mentira** para conhecer a tela sem usar arquivo de cliente.
+
+Enquanto usa, deixe aberta a janela preta que aparece junto: é ela que faz o Concilia funcionar. Para fechar, é só fechar essa janela.
+
+**Prefere pedir sem abrir a tela?** Coloque os dois arquivos na pasta do Concilia e peça ao agente:
 
 ```
 Concilie agenda-padaria-outubro.xlsx com extrato-padaria-outubro.xlsx
 ```
 
-O relatório sai na mesma pasta, numa planilha chamada `relatorio-` com a data de hoje.
-
-Se preferir rodar você mesma no terminal, o comando é:
-
-```
-python conciliar.py agenda-padaria-outubro.xlsx extrato-padaria-outubro.xlsx
-```
+O relatório sai na mesma pasta, numa planilha chamada `relatorio-` com a data de hoje. O comando por trás é `python conciliar.py agenda.xlsx extrato.xlsx`.
 
 ## Como atualizar
 
@@ -68,8 +77,8 @@ Arquivo `.xls` antigo: abra no Excel e salve como `.xlsx`. PDF ainda não é lid
 
 A planilha tem três abas:
 
-- **Divergencias:** cada problema, com a data, o valor esperado, o valor encontrado, a diferença e uma explicação. Os mais graves vêm primeiro.
-- **Resumo:** quanto dinheiro está em jogo em cada tipo de problema. Dá para entender em 5 segundos.
+- **Resumo:** a capa. Quantos conciliou, o valor que bateu, quantos precisam de atenção e onde está o dinheiro em jogo. Dá para entender em 5 segundos e mandar para o cliente.
+- **Divergências:** cada problema, com a data, o valor esperado, o valor encontrado, a diferença e uma explicação. Os mais graves vêm primeiro, com a gravidade em cor.
 - **Conciliados:** o que bateu, com o depósito correspondente e como o sistema casou, para você conferir.
 
 Os tipos de problema são: previsto e não recebido, valor diferente do previsto, entrada sem origem identificada e chargeback.
@@ -94,11 +103,13 @@ Atenção: se o seu banco mostra o depósito da adquirente só como `TED RECEBID
 
 ## Onde ficam os seus dados
 
-**Só no seu computador**, na pasta do Concilia. Nada vai para a internet, nem para a Cláudia, nem para o GitHub. As planilhas dos clientes ficam fora do controle de versão de propósito (o arquivo `.gitignore` já bloqueia `.xlsx` e `.csv`, menos os exemplos).
+**Só no seu computador**, na pasta do Concilia. A tela abre no navegador, mas não é um site: ela roda no próprio computador (o endereço começa com `127.0.0.1`) e funciona até sem internet. Nada vai para a internet, nem para a Cláudia, nem para o GitHub. As planilhas dos clientes ficam fora do controle de versão de propósito (o arquivo `.gitignore` já bloqueia `.xlsx` e `.csv`, menos os exemplos).
 
 Para apagar tudo de um cliente, é só apagar os arquivos dele na pasta.
 
 ## Quer testar antes de ter arquivo real?
+
+Abra o Concilia e clique em **Veja com um exemplo de mentira**. Ou, pelo comando:
 
 ```
 python conciliar.py exemplos/agenda-exemplo.xlsx exemplos/extrato-exemplo.xlsx
@@ -126,24 +137,32 @@ Se o usuário colou "Instale https://github.com/claudiabernardo-sketch/concilia"
    - Mac: `brew install python` ou o instalador de python.org.
    Use nos passos seguintes o comando que funcionou (`python`, `py` ou `python3`).
 4. **Dependências.** `python -m pip install -r requisitos.txt` (só o `openpyxl`, para ler e escrever Excel).
-5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 51 TESTES PASSARAM`.
+5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 60 TESTES PASSARAM`.
 6. **Exemplo.** `python conciliar.py exemplos/agenda-exemplo.xlsx exemplos/extrato-exemplo.xlsx --saida relatorio-exemplo.xlsx`.
-7. **Conferir.** O resultado tem que mostrar `Conciliados 6` e `Precisam de atencao 4`, e o arquivo `relatorio-exemplo.xlsx` tem que existir com as abas Divergencias, Resumo e Conciliados. Mostre ao usuário o resumo e onde o arquivo ficou.
-8. **Explicar o próximo passo:** baixar a agenda e o extrato de um cliente, salvar nesta pasta com um apelido no nome, e pedir "Concilie agenda-APELIDO.xlsx com extrato-APELIDO.xlsx".
+7. **Conferir.** O resultado tem que mostrar `Conciliados 6` e `Precisam de atencao 4`, e o arquivo `relatorio-exemplo.xlsx` tem que existir com as abas Resumo, Divergências e Conciliados. Mostre ao usuário o resumo e onde o arquivo ficou.
+8. **Abrir a tela.** Rode `python abrir_concilia.py` **em segundo plano** (ele fica rodando, não espere terminar). O navegador abre sozinho em `http://127.0.0.1:8765/` (se a porta estiver ocupada, o endereço aparece na saída). Diga ao usuário para clicar em **Veja com um exemplo de mentira**.
+9. **Explicar o próximo passo:** baixar a agenda e o extrato de um cliente, salvar com um apelido no nome e, nas próximas vezes, pedir "Abra o Concilia" ou dar dois cliques em **Abrir Concilia** na pasta.
 
-Se o usuário pedir "Atualize o Concilia": na pasta do projeto, rode `git pull` (se a pasta veio do `git clone`). Se veio do zip, baixe o zip de novo e substitua só os arquivos do projeto (`conciliar.py`, `concilia/`, `testes/`, `exemplos/`, `requisitos.txt`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `LICENSE`), sem apagar as planilhas do usuário. Depois rode `python -m pip install -r requisitos.txt` e `python -m testes.testar` e diga quantos testes passaram.
+Se o usuário pedir "Abra o Concilia": na pasta do projeto, rode `python abrir_concilia.py` em segundo plano e diga que a tela abriu no navegador. Se ele pedir "Concilie X com Y", rode `python conciliar.py X Y` e explique o resultado.
+
+Se o usuário pedir "Atualize o Concilia": na pasta do projeto, rode `git pull` (se a pasta veio do `git clone`). Se veio do zip, baixe o zip de novo e substitua só os arquivos do projeto (`conciliar.py`, `abrir_concilia.py`, `Abrir Concilia.bat`, `Abrir Concilia.command`, `concilia/`, `testes/`, `exemplos/`, `requisitos.txt`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `LICENSE`), sem apagar as planilhas do usuário. Depois rode `python -m pip install -r requisitos.txt` e `python -m testes.testar` e diga quantos testes passaram.
 
 Se algum passo falhar, pare, diga o erro em português simples e não invente contorno que mude o motor.
 
 ## Para quem quer conferir o código
 
 ```
-conciliar.py              o comando que você roda e o relatório em Excel
+abrir_concilia.py         abre a tela no navegador (Abrir Concilia.bat no Windows)
+conciliar.py              o comando, para quem prefere pedir sem tela
 concilia/motor.py         as regras de conciliação
+concilia/servico.py       lê os arquivos e monta o resultado (tela e comando usam o mesmo)
+concilia/relatorio.py     o relatório em Excel
+concilia/servidor.py      a tela, que roda só no computador (127.0.0.1)
+concilia/tela/index.html  a página que aparece no navegador
 concilia/mapear.py        descobre de qual coluna vem cada informação
 concilia/planilha.py      leitura de Excel e CSV
 concilia/formato.py       valor e data no padrão brasileiro
-testes/                   51 testes, cada um uma situação real
+testes/                   60 testes, cada um uma situação real
 exemplos/                 planilhas de mentira para testar
 ```
 
