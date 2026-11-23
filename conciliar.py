@@ -209,6 +209,7 @@ def main():
     print("=" * 68)
     print("CONCILIA")
     print("=" * 68)
+    print("VERSAO DE TESTE: confira o relatorio antes de mandar para o cliente.")
 
     try:
         recebiveis = carregar(argumentos.agenda, "recebiveis", "Agenda de recebiveis")

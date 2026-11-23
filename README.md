@@ -1,5 +1,7 @@
 # Concilia, conciliadora de cartão
 
+> **Versão de teste.** O Concilia está sendo testado pelas alunas da Cláudia com arquivos reais de várias maquininhas. Confira sempre o relatório antes de mandar para o cliente, e conte o que aconteceu no formulário de teste.
+
 Confere se o dinheiro que a maquininha prometeu pagar caiu mesmo no banco.
 
 Você baixa a **agenda de recebíveis** no portal da adquirente, baixa o **extrato** no banco, e o Concilia cruza os dois. Sai uma planilha de Excel com tudo que bateu e, principalmente, com tudo que **não** bateu: o que não caiu, o que caiu a menos e o dinheiro que entrou sem ninguém saber de onde veio.
@@ -38,6 +40,16 @@ Se preferir rodar você mesma no terminal, o comando é:
 ```
 python conciliar.py agenda-padaria-outubro.xlsx extrato-padaria-outubro.xlsx
 ```
+
+## Como atualizar
+
+Durante o teste, o Concilia recebe correções. Para pegar a versão nova, abra o agente na pasta do Concilia e peça:
+
+```
+Atualize o Concilia
+```
+
+As planilhas dos seus clientes que estão na pasta não são apagadas.
 
 ## O que precisa ter nos arquivos
 
@@ -118,6 +130,8 @@ Se o usuário colou "Instale https://github.com/claudiabernardo-sketch/concilia"
 6. **Exemplo.** `python conciliar.py exemplos/agenda-exemplo.xlsx exemplos/extrato-exemplo.xlsx --saida relatorio-exemplo.xlsx`.
 7. **Conferir.** O resultado tem que mostrar `Conciliados 6` e `Precisam de atencao 4`, e o arquivo `relatorio-exemplo.xlsx` tem que existir com as abas Divergencias, Resumo e Conciliados. Mostre ao usuário o resumo e onde o arquivo ficou.
 8. **Explicar o próximo passo:** baixar a agenda e o extrato de um cliente, salvar nesta pasta com um apelido no nome, e pedir "Concilie agenda-APELIDO.xlsx com extrato-APELIDO.xlsx".
+
+Se o usuário pedir "Atualize o Concilia": na pasta do projeto, rode `git pull` (se a pasta veio do `git clone`). Se veio do zip, baixe o zip de novo e substitua só os arquivos do projeto (`conciliar.py`, `concilia/`, `testes/`, `exemplos/`, `requisitos.txt`, `README.md`, `AGENTS.md`, `CLAUDE.md`, `LICENSE`), sem apagar as planilhas do usuário. Depois rode `python -m pip install -r requisitos.txt` e `python -m testes.testar` e diga quantos testes passaram.
 
 Se algum passo falhar, pare, diga o erro em português simples e não invente contorno que mude o motor.
 
