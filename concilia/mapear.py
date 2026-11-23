@@ -67,11 +67,12 @@ PISTAS = {
     "valor":              ["valor"],
     "nsu":                ["nsu", "doc", "documento"],
     "codigo_autorizacao": ["autorizacao", "cod autorizacao", "authorization"],
-    "bandeira":           ["bandeira", "produto", "brand"],
-    "modalidade":         ["modalidade", "tipo de venda", "forma de pagamento", "tipo"],
+    "bandeira":           ["bandeira", "brand"],
+    # Na Stone a coluna PRODUTO traz Debito, Credito, Debito Pre-pago.
+    "modalidade":         ["modalidade", "produto", "tipo de venda", "forma de pagamento", "tipo"],
     "parcelas":           ["parcelas", "qtd parcelas", "total de parcelas"],
-    "numero_parcela":     ["parcela", "n parcela", "numero da parcela"],
-    "total_parcelas":     ["total de parcelas", "qtd parcelas"],
+    "numero_parcela":     ["parcela", "n parcela", "numero da parcela", "no da parcela"],
+    "total_parcelas":     ["total de parcelas", "qtd parcelas", "qtd de parcelas"],
     "status":             ["status", "situacao"],
     "descricao":          ["historico", "descricao", "lancamento", "memo"],
     "id_externo":         ["fitid", "identificador", "id"],
@@ -80,7 +81,7 @@ PISTAS = {
 
 def _limpar(texto) -> str:
     texto = str(texto or "").lower()
-    texto = unicodedata.normalize("NFD", texto)
+    texto = unicodedata.normalize("NFKD", texto)  # NFKD: "nº" vira "no"
     texto = "".join(c for c in texto if unicodedata.category(c) != "Mn")
     return " ".join(texto.split())
 

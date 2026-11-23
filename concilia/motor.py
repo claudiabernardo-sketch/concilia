@@ -290,7 +290,10 @@ def conciliar_recebiveis(recebiveis, movimentos, hoje=None, parametros=None):
             })
 
     def soma_de(lote):
-        return arredondar(sum(arredondar(r["valor_liquido"]) for r in lote))
+        # Soma o valor exato e so arredonda no fim. A Stone, por exemplo,
+        # manda o liquido com 6 casas; arredondar venda por venda antes de
+        # somar acumula centavos (R$ 0,15 num dia de 248 vendas).
+        return arredondar(sum(para_numero_seguro(r["valor_liquido"]) for r in lote))
 
     def apontar_valor_divergente(lote, data_prevista):
         soma = soma_de(lote)

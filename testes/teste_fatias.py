@@ -317,3 +317,76 @@ def _():
 def _():
     de_para = mapear.sugerir(["Data prevista", "Valor liquido"], "recebiveis")
     igual(mapear.faltando(de_para, "recebiveis"), [], "campos faltando")
+
+
+G11 = "ARQUIVO NO FORMATO DA STONE (VALORES FICTICIOS)"
+
+CABECALHO_STONE = (
+    "DOCUMENTO;STONECODE;CATEGORIA;DATA DA VENDA;DATA DE VENCIMENTO;"
+    "DATA DE VENCIMENTO ORIGINAL;BANDEIRA;PRODUTO;STONE ID;QTD DE PARCELAS;"
+    "Nº DA PARCELA;VALOR BRUTO;VALOR LÍQUIDO;DESCONTO DE MDR;"
+    "DESCONTO DE ANTECIPAÇÃO;DESCONTO UNIFICADO;ÚLTIMO STATUS;"
+    "DATA DO ÚLTIMO STATUS;ENTRADAS BRUTAS;SAÍDAS BRUTAS"
+)
+
+
+def _linha_stone(vencimento, original, bandeira, produto, bruto, liquido):
+    return (f"00.000.000/0001-00;000000000;Venda;{vencimento} 10:00:00;{vencimento};"
+            f"{original};{bandeira};{produto};00000000000000;1;1;{bruto};{liquido};"
+            f"0,000000;0,000000;-0,272000;Pago;{vencimento} 00:00:00;{bruto};0,000000")
+
+
+@teste(G11, "liquido com 6 casas: soma exata, sem acumular centavo de arredondamento")
+def _():
+    # 20 vendas de 19,728: exato da 394,56. Arredondando uma por uma (19,73)
+    # daria 394,60 e o lote nunca bateria.
+    r = conciliar(
+        recebiveis=[rec("2026-10-01", "19.728000") for _ in range(20)],
+        movimentos=[mov("2026-10-01", "394.56")],
+        hoje=HOJE,
+    )
+    igual(len(r["conciliacoes"]), 20, "conciliados")
+    igual(len(r["divergencias"]), 0, "divergencias")
+
+
+@teste(G11, "reconhece as colunas da agenda da Stone")
+def _():
+    de_para = mapear.sugerir(CABECALHO_STONE.split(";"), "recebiveis")
+    igual(de_para.get("DATA DE VENCIMENTO"), "data_prevista", "data prevista")
+    igual(de_para.get("VALOR LÍQUIDO"), "valor_liquido", "valor liquido")
+    igual(de_para.get("PRODUTO"), "modalidade", "modalidade")
+    igual(de_para.get("BANDEIRA"), "bandeira", "bandeira")
+    igual(de_para.get("QTD DE PARCELAS"), "total_parcelas", "total de parcelas")
+    igual(de_para.get("Nº DA PARCELA"), "numero_parcela", "numero da parcela")
+    igual(de_para.get("ÚLTIMO STATUS"), "status", "situacao")
+    igual("DATA DE VENCIMENTO ORIGINAL" in de_para, False, "vencimento original fica de fora")
+
+
+@teste(G11, "CSV da Stone do inicio ao fim: debito e credito em depositos separados")
+def _():
+    import os
+    import tempfile
+    from concilia import planilha
+    linhas = [
+        CABECALHO_STONE,
+        _linha_stone("01/10/2026", "01/10/2026", "MasterCard", "Debito", "20,000000", "19,728000"),
+        _linha_stone("01/10/2026", "01/10/2026", "Visa", "Debito Pre-pago", "13,000000", "12,823200"),
+        _linha_stone("01/10/2026", "31/10/2026", "Visa", "Credito", "22,000000", "21,155200"),
+        _linha_stone("01/10/2026", "31/10/2026", "Elo", "Credito Pre-pago", "9,000000", "8,654400"),
+    ]
+    with tempfile.TemporaryDirectory() as pasta:
+        caminho = os.path.join(pasta, "agenda-stone.csv")
+        with open(caminho, "w", encoding="utf-8-sig") as f:
+            f.write("\n".join(linhas) + "\n")
+        brutas = planilha.ler(caminho)
+    de_para = mapear.sugerir(list(brutas[0].keys()), "recebiveis")
+    registros, ignoradas = mapear.aplicar(brutas, de_para, "recebiveis")
+    igual(ignoradas, 0, "linhas ignoradas")
+    r = conciliar(
+        recebiveis=registros,
+        movimentos=[mov("2026-10-01", "32.55", descricao="TED STONE INSTITUICAO DE PAGAMENTO"),
+                    mov("2026-10-01", "29.81", descricao="TED STONE INSTITUICAO DE PAGAMENTO")],
+        hoje=HOJE,
+    )
+    igual(len(r["conciliacoes"]), 4, "conciliados")
+    igual(len(r["divergencias"]), 0, "divergencias")

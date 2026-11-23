@@ -114,7 +114,7 @@ Se o usuário colou "Instale https://github.com/claudiabernardo-sketch/concilia"
    - Mac: `brew install python` ou o instalador de python.org.
    Use nos passos seguintes o comando que funcionou (`python`, `py` ou `python3`).
 4. **Dependências.** `python -m pip install -r requisitos.txt` (só o `openpyxl`, para ler e escrever Excel).
-5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 48 TESTES PASSARAM`.
+5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 51 TESTES PASSARAM`.
 6. **Exemplo.** `python conciliar.py exemplos/agenda-exemplo.xlsx exemplos/extrato-exemplo.xlsx --saida relatorio-exemplo.xlsx`.
 7. **Conferir.** O resultado tem que mostrar `Conciliados 6` e `Precisam de atencao 4`, e o arquivo `relatorio-exemplo.xlsx` tem que existir com as abas Divergencias, Resumo e Conciliados. Mostre ao usuário o resumo e onde o arquivo ficou.
 8. **Explicar o próximo passo:** baixar a agenda e o extrato de um cliente, salvar nesta pasta com um apelido no nome, e pedir "Concilie agenda-APELIDO.xlsx com extrato-APELIDO.xlsx".
@@ -129,7 +129,7 @@ concilia/motor.py         as regras de conciliação
 concilia/mapear.py        descobre de qual coluna vem cada informação
 concilia/planilha.py      leitura de Excel e CSV
 concilia/formato.py       valor e data no padrão brasileiro
-testes/                   48 testes, cada um uma situação real
+testes/                   51 testes, cada um uma situação real
 exemplos/                 planilhas de mentira para testar
 ```
 
