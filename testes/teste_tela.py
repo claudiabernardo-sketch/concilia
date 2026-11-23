@@ -185,3 +185,18 @@ def _():
     finally:
         servidor.shutdown()
         servidor.server_close()
+
+
+@teste(G13, "abrir o Concilia duas vezes nao divide a mesma porta")
+def _():
+    primeiro, _ = criar_servidor(0, hoje=HOJE)
+    try:
+        porta = primeiro.server_port
+        try:
+            segundo, _ = criar_servidor(porta, hoje=HOJE)
+            segundo.server_close()
+            raise AssertionError("o segundo conseguiu usar a porta do primeiro")
+        except OSError:
+            pass  # certo: a porta e so do primeiro, e o abrir_concilia escolhe outra
+    finally:
+        primeiro.server_close()

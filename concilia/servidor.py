@@ -16,6 +16,7 @@ import binascii
 import io
 import json
 import secrets
+import socket
 import tempfile
 from datetime import date
 from http.server import BaseHTTPRequestHandler, ThreadingHTTPServer
@@ -45,6 +46,22 @@ def _apelido(nome):
             base = base[len(tirar):]
     base = "".join(c if c.isalnum() or c in "-_" else "-" for c in base).strip("-_")
     return base[:40]
+
+
+class _Servidor(ThreadingHTTPServer):
+    """Servidor que nao divide a porta com ninguem.
+
+    O padrao do Python deixa dois programas usarem a mesma porta no
+    Windows, e ai os pedidos caem no lugar errado. Aqui a porta e so dele:
+    se estiver ocupada, quem abriu escolhe outra.
+    """
+    allow_reuse_address = False
+    daemon_threads = True
+
+    def server_bind(self):
+        if hasattr(socket, "SO_EXCLUSIVEADDRUSE"):
+            self.socket.setsockopt(socket.SOL_SOCKET, socket.SO_EXCLUSIVEADDRUSE, 1)
+        super().server_bind()
 
 
 def criar_servidor(porta=0, hoje=None):
@@ -178,6 +195,5 @@ def criar_servidor(porta=0, hoje=None):
             dados["ok"] = True
             return self._json(200, dados)
 
-    servidor = ThreadingHTTPServer(("127.0.0.1", porta), Atendente)
-    servidor.daemon_threads = True
+    servidor = _Servidor(("127.0.0.1", porta), Atendente)
     return servidor, chave

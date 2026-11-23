@@ -137,7 +137,7 @@ Se o usuário colou "Instale https://github.com/claudiabernardo-sketch/concilia"
    - Mac: `brew install python` ou o instalador de python.org.
    Use nos passos seguintes o comando que funcionou (`python`, `py` ou `python3`).
 4. **Dependências.** `python -m pip install -r requisitos.txt` (só o `openpyxl`, para ler e escrever Excel).
-5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 60 TESTES PASSARAM`.
+5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 61 TESTES PASSARAM`.
 6. **Exemplo.** `python conciliar.py exemplos/agenda-exemplo.xlsx exemplos/extrato-exemplo.xlsx --saida relatorio-exemplo.xlsx`.
 7. **Conferir.** O resultado tem que mostrar `Conciliados 6` e `Precisam de atencao 4`, e o arquivo `relatorio-exemplo.xlsx` tem que existir com as abas Resumo, Divergências e Conciliados. Mostre ao usuário o resumo e onde o arquivo ficou.
 8. **Abrir a tela.** Rode `python abrir_concilia.py` **em segundo plano** (ele fica rodando, não espere terminar). O navegador abre sozinho em `http://127.0.0.1:8765/` (se a porta estiver ocupada, o endereço aparece na saída). Diga ao usuário para clicar em **Veja com um exemplo de mentira**.
@@ -162,7 +162,7 @@ concilia/tela/index.html  a página que aparece no navegador
 concilia/mapear.py        descobre de qual coluna vem cada informação
 concilia/planilha.py      leitura de Excel e CSV
 concilia/formato.py       valor e data no padrão brasileiro
-testes/                   60 testes, cada um uma situação real
+testes/                   61 testes, cada um uma situação real
 exemplos/                 planilhas de mentira para testar
 ```
 
