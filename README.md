@@ -36,6 +36,8 @@ Abra o Concilia
 Ou dê dois cliques no arquivo **Abrir Concilia** que está na pasta (no Mac, **Abrir Concilia.command**).
 
 5. Abre uma tela no navegador. **Arraste a agenda** para o quadro 1, **o extrato** para o quadro 2 e clique em **Conciliar**.
+
+   **Pode pôr mais de um arquivo em cada quadro.** O cliente tem vale-alimentação (VR, Alelo, Ticket, Pluxee)? Ponha a agenda de cada um junto com a da maquininha: o vale tem agenda própria, no portal dele. O dinheiro cai em mais de uma conta (Itaú, BB, PJ Bank)? Ponha o extrato de cada conta. O Concilia junta tudo, não mistura o lote da maquininha com o do vale, e mostra em qual conta caiu cada depósito. Pôs um arquivo errado? Clique no **X** ao lado do nome.
 6. Na hora aparece o resultado: quanto bateu, o que precisa de atenção e onde está o dinheiro em jogo. Clique em **Baixar relatório em Excel** para guardar ou mandar ao cliente.
 
 Na primeira vez, clique em **Veja com um exemplo de mentira** para conhecer a tela sem usar arquivo de cliente.
@@ -48,7 +50,7 @@ Enquanto usa, deixe aberta a janela preta que aparece junto: é ela que faz o Co
 Concilie agenda-padaria-outubro.xlsx com extrato-padaria-outubro.xlsx
 ```
 
-O relatório sai na mesma pasta, numa planilha chamada `relatorio-` com a data de hoje. O comando por trás é `python conciliar.py agenda.xlsx extrato.xlsx`.
+O relatório sai na mesma pasta, numa planilha chamada `relatorio-` com a data de hoje. O comando por trás é `python conciliar.py agenda.xlsx extrato.xlsx`. Com mais arquivos: `--outra-agenda agenda-alelo.xlsx` e `--outro-extrato extrato-bb.xlsx` (pode repetir).
 
 ## Como atualizar
 
@@ -79,7 +81,7 @@ A planilha tem três abas:
 
 - **Resumo:** a capa. Quantos conciliou, o valor que bateu, quantos precisam de atenção e onde está o dinheiro em jogo. Dá para entender em 5 segundos e mandar para o cliente.
 - **Divergências:** cada problema, com a data, o valor esperado, o valor encontrado, a diferença e uma explicação. Os mais graves vêm primeiro, com a gravidade em cor.
-- **Conciliados:** o que bateu, com o depósito correspondente e como o sistema casou, para você conferir.
+- **Conciliados:** o que bateu, com o depósito correspondente, em qual conta caiu, de qual agenda veio e como o sistema casou, para você conferir.
 
 Os tipos de problema são: previsto e não recebido, valor diferente do previsto, entrada sem origem identificada e chargeback.
 
@@ -137,7 +139,7 @@ Se o usuário colou "Instale https://github.com/claudiabernardo-sketch/concilia"
    - Mac: `brew install python` ou o instalador de python.org.
    Use nos passos seguintes o comando que funcionou (`python`, `py` ou `python3`).
 4. **Dependências.** `python -m pip install -r requisitos.txt` (só o `openpyxl`, para ler e escrever Excel).
-5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 61 TESTES PASSARAM`.
+5. **Testes.** `python -m testes.testar`. Tem que terminar com `TODOS OS 67 TESTES PASSARAM`.
 6. **Exemplo.** `python conciliar.py exemplos/agenda-exemplo.xlsx exemplos/extrato-exemplo.xlsx --saida relatorio-exemplo.xlsx`.
 7. **Conferir.** O resultado tem que mostrar `Conciliados 6` e `Precisam de atencao 4`, e o arquivo `relatorio-exemplo.xlsx` tem que existir com as abas Resumo, Divergências e Conciliados. Mostre ao usuário o resumo e onde o arquivo ficou.
 8. **Abrir a tela.** Rode `python abrir_concilia.py` **em segundo plano** (ele fica rodando, não espere terminar). O navegador abre sozinho em `http://127.0.0.1:8765/` (se a porta estiver ocupada, o endereço aparece na saída). Diga ao usuário para clicar em **Veja com um exemplo de mentira**.
@@ -162,7 +164,7 @@ concilia/tela/index.html  a página que aparece no navegador
 concilia/mapear.py        descobre de qual coluna vem cada informação
 concilia/planilha.py      leitura de Excel e CSV
 concilia/formato.py       valor e data no padrão brasileiro
-testes/                   61 testes, cada um uma situação real
+testes/                   67 testes, cada um uma situação real
 exemplos/                 planilhas de mentira para testar
 ```
 

@@ -79,9 +79,12 @@ def _aba_resumo(aba, dados):
     aba["B2"].font = Font(name=FONTE, bold=True, size=20, color=TINTA)
     aba.row_dimensions[2].height = 32
     arquivos = dados.get("arquivos", {})
-    agenda = arquivos.get("agenda", {}).get("nome", "")
-    extrato = arquivos.get("extrato", {}).get("nome", "")
-    aba["B3"] = f"Gerado em {dados.get('gerado_em', '')}  ·  Agenda: {agenda}  ·  Extrato: {extrato}"
+    agendas = [i["nome"] for i in arquivos.get("agendas", [])] or [arquivos.get("agenda", {}).get("nome", "")]
+    extratos = [i["nome"] for i in arquivos.get("extratos", [])] or [arquivos.get("extrato", {}).get("nome", "")]
+    rot_a = "Agendas" if len(agendas) > 1 else "Agenda"
+    rot_e = "Extratos" if len(extratos) > 1 else "Extrato"
+    aba["B3"] = (f"Gerado em {dados.get('gerado_em', '')}  ·  {rot_a}: {', '.join(agendas)}"
+                 f"  ·  {rot_e}: {', '.join(extratos)}")
     aba["B3"].font = Font(name=FONTE, size=10, color=CINZA)
 
     # Faixa colorida embaixo do titulo
@@ -159,13 +162,13 @@ def _aba_resumo(aba, dados):
 def _aba_divergencias(aba, dados):
     aba.sheet_view.showGridLines = False
     _cabecalho(aba, 1, ["Problema", "Gravidade", "Data", "Competência", "Esperado",
-                        "Encontrado", "Diferença", "Observação"])
+                        "Encontrado", "Diferença", "Observação", "Arquivo"])
     for n, d in enumerate(dados["divergencias"]):
         linha = n + 2
         _corpo(aba, linha, [
             d["nome"], d["gravidade_nome"], d["data"], d["competencia"],
             _valor(d["esperado"]), _valor(d["encontrado"]), _valor(d["diferenca"]),
-            d["observacao"],
+            d["observacao"], d.get("arquivo", ""),
         ], zebra=n % 2 == 1, moedas=(5, 6, 7), quebra=(8,))
         cor, fundo = CORES_GRAVIDADE.get(d["gravidade"], (CINZA, FUNDO))
         g = aba.cell(row=linha, column=2)
@@ -177,10 +180,10 @@ def _aba_divergencias(aba, dados):
     if not dados["divergencias"]:
         c = aba.cell(row=2, column=1, value="Nenhuma divergência. Tudo bateu.")
         c.font = Font(name=FONTE, bold=True, color=VERDE)
-    _larguras(aba, (32, 12, 13, 13, 15, 15, 15, 70))
+    _larguras(aba, (32, 12, 13, 13, 15, 15, 15, 70, 28))
     aba.freeze_panes = "A2"
     if dados["divergencias"]:
-        aba.auto_filter.ref = f"A1:H{len(dados['divergencias']) + 1}"
+        aba.auto_filter.ref = f"A1:I{len(dados['divergencias']) + 1}"
     aba.sheet_properties.tabColor = VERMELHO
 
 
@@ -188,20 +191,21 @@ def _aba_conciliados(aba, dados):
     aba.sheet_view.showGridLines = False
     _cabecalho(aba, 1, ["Data prevista", "Modalidade", "Bandeira", "Valor líquido",
                         "Caiu no banco em", "Valor do depósito", "Histórico do banco",
-                        "Como casou"])
+                        "Como casou", "Conta (extrato)", "Agenda"])
     for n, c in enumerate(dados["conciliados"]):
         _corpo(aba, n + 2, [
             c["data_prevista"], c["modalidade"], c["bandeira"], _valor(c["valor_liquido"]),
             c["data_banco"], _valor(c["valor_deposito"]), c["historico"], c["como"],
+            c.get("conta", ""), c.get("agenda", ""),
         ], zebra=n % 2 == 1, moedas=(4, 6))
         aba.cell(row=n + 2, column=8).font = Font(name=FONTE, color=VERDE)
         aba.row_dimensions[n + 2].height = 22
     if not dados["conciliados"]:
         aba.cell(row=2, column=1, value="Nada foi conciliado.").font = Font(name=FONTE, color=CINZA)
-    _larguras(aba, (15, 20, 14, 16, 18, 18, 34, 34))
+    _larguras(aba, (15, 20, 14, 16, 18, 18, 34, 34, 26, 26))
     aba.freeze_panes = "A2"
     if dados["conciliados"]:
-        aba.auto_filter.ref = f"A1:H{len(dados['conciliados']) + 1}"
+        aba.auto_filter.ref = f"A1:J{len(dados['conciliados']) + 1}"
     aba.sheet_properties.tabColor = VERDE
 
 

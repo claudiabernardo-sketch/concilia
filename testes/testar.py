@@ -3,6 +3,7 @@
 import testes.teste_motor as suite
 import testes.teste_fatias  # noqa: F401  (registra os testes na mesma lista)
 import testes.teste_tela  # noqa: F401
+import testes.teste_varios  # noqa: F401
 
 
 def main():

@@ -24,7 +24,7 @@ from pathlib import Path
 from urllib.parse import parse_qs, urlsplit
 
 from . import relatorio
-from .servico import ROTULOS, ArquivoComProblema, acentuar, executar
+from .servico import ROTULOS, ArquivoComProblema, acentuar, executar_varios
 
 PASTA = Path(__file__).resolve().parent
 PAGINA = PASTA / "tela" / "index.html"
@@ -32,6 +32,7 @@ EXEMPLOS = PASTA.parent / "exemplos"
 
 LIMITE_BYTES = 40 * 1024 * 1024  # 40 MB, bem mais que uma agenda de mes inteiro
 EXTENSOES = {".xlsx", ".xlsm", ".csv", ".txt"}
+MAXIMO_ARQUIVOS = 12  # por quadro
 
 
 def _nome_seguro(nome, padrao):
@@ -144,41 +145,56 @@ def criar_servidor(porta=0, hoje=None):
                 return self._json(400, {"ok": False, "erro": "Pedido inválido."})
 
             if url.path == "/exemplo":
-                return self._conciliar(EXEMPLOS / "agenda-exemplo.xlsx",
-                                       EXEMPLOS / "extrato-exemplo.xlsx",
-                                       "agenda-exemplo.xlsx", "extrato-exemplo.xlsx")
+                return self._conciliar(
+                    [(EXEMPLOS / "agenda-exemplo.xlsx", "agenda-exemplo.xlsx")],
+                    [(EXEMPLOS / "extrato-exemplo.xlsx", "extrato-exemplo.xlsx")])
 
             if url.path == "/conciliar":
                 with tempfile.TemporaryDirectory(prefix="concilia-") as pasta:
-                    caminhos = []
-                    nomes = []
-                    for campo, padrao in (("agenda", "agenda.xlsx"), ("extrato", "extrato.xlsx")):
-                        item = pedido.get(campo) or {}
-                        nome = _nome_seguro(item.get("nome"), padrao)
-                        if Path(nome).suffix.lower() not in EXTENSOES:
-                            tipo = "recebiveis" if campo == "agenda" else "extrato"
+                    grupos = {}
+                    for campo, tipo, padrao in (("agendas", "recebiveis", "agenda.xlsx"),
+                                                ("extratos", "extrato", "extrato.xlsx")):
+                        # aceita lista (varios arquivos) ou um so (versao antiga da tela)
+                        itens = pedido.get(campo)
+                        if itens is None:
+                            item = pedido.get(campo[:-1])
+                            itens = [item] if item else []
+                        if not isinstance(itens, list) or not itens:
                             return self._json(200, {
                                 "ok": False, "arquivo": tipo, "rotulo": ROTULOS[tipo],
-                                "erro": f"{nome} não é Excel (.xlsx) nem CSV. Se for .xls antigo, "
-                                        "abra no Excel e salve como .xlsx. PDF ainda não é lido."})
-                        try:
-                            conteudo = base64.b64decode(item.get("conteudo") or "", validate=True)
-                        except (binascii.Error, ValueError):
-                            return self._json(400, {"ok": False, "erro": "Arquivo corrompido."})
-                        caminho = Path(pasta) / f"{campo}{Path(nome).suffix.lower()}"
-                        caminho.write_bytes(conteudo)
-                        caminhos.append(caminho)
-                        nomes.append(nome)
-                    return self._conciliar(caminhos[0], caminhos[1], nomes[0], nomes[1])
+                                "erro": f"Falta {'a agenda de recebíveis' if tipo == 'recebiveis' else 'o extrato do banco'}."})
+                        if len(itens) > MAXIMO_ARQUIVOS:
+                            return self._json(200, {
+                                "ok": False, "arquivo": tipo, "rotulo": ROTULOS[tipo],
+                                "erro": f"São muitos arquivos de uma vez (o limite é {MAXIMO_ARQUIVOS})."})
+                        lista = []
+                        for n, item in enumerate(itens, start=1):
+                            item = item or {}
+                            nome = _nome_seguro(item.get("nome"), padrao)
+                            if Path(nome).suffix.lower() not in EXTENSOES:
+                                return self._json(200, {
+                                    "ok": False, "arquivo": tipo, "rotulo": ROTULOS[tipo],
+                                    "erro": f"{nome} não é Excel (.xlsx) nem CSV. Se for .xls antigo, "
+                                            "abra no Excel e salve como .xlsx. PDF ainda não é lido."})
+                            try:
+                                conteudo = base64.b64decode(item.get("conteudo") or "", validate=True)
+                            except (binascii.Error, ValueError):
+                                return self._json(400, {"ok": False, "erro": f"{nome} veio corrompido."})
+                            caminho = Path(pasta) / f"{tipo}-{n}{Path(nome).suffix.lower()}"
+                            caminho.write_bytes(conteudo)
+                            lista.append((caminho, nome))
+                        grupos[tipo] = lista
+                    return self._conciliar(grupos["recebiveis"], grupos["extrato"])
 
             return self._json(404, {"ok": False, "erro": "Não encontrado."})
 
-        def _conciliar(self, agenda, extrato, nome_agenda, nome_extrato):
+        def _conciliar(self, agendas, extratos):
             try:
-                tudo = executar(agenda, extrato, nome_agenda, nome_extrato, hoje=hoje)
+                tudo = executar_varios(agendas, extratos, hoje=hoje)
             except ArquivoComProblema as e:
                 return self._json(200, {
                     "ok": False, "arquivo": e.tipo, "rotulo": ROTULOS[e.tipo], "erro": e.mensagem,
+                    "nome": e.nome,
                     "faltando": [acentuar(c) for c in e.faltando], "colunas": e.colunas})
             except Exception as e:  # nunca deixa a tela travada sem explicacao
                 return self._json(200, {"ok": False, "erro": f"Algo deu errado: {e}"})
@@ -187,7 +203,7 @@ def criar_servidor(porta=0, hoje=None):
             memoria = io.BytesIO()
             relatorio.gravar(dados, memoria)
             ident = secrets.token_urlsafe(9)
-            apelido = _apelido(nome_agenda)
+            apelido = _apelido(agendas[0][1])
             nome = f"relatorio-{apelido + '-' if apelido else ''}{date.today():%Y-%m-%d}.xlsx"
             relatorios.clear()  # so guarda o ultimo, pra nao acumular memoria
             relatorios[ident] = (nome, memoria.getvalue())

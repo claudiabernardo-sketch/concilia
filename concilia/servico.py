@@ -127,6 +127,14 @@ def montar(resultado, recebiveis, movimentos):
             return data_br(mov_por_id[d["referencia_id"]]["data"])
         return "-"
 
+    def arquivo_da(d):
+        """De qual arquivo veio: a agenda (recebivel) ou o extrato/conta (movimento)."""
+        if d["referencia_tipo"] == "recebivel":
+            return rec_por_id.get(d["referencia_id"], {}).get("arquivo", "")
+        if d["referencia_tipo"] == "movimento":
+            return mov_por_id.get(d["referencia_id"], {}).get("arquivo", "")
+        return ""
+
     ordem = {"alta": 0, "media": 1, "baixa": 2}
     divergencias = []
     for d in sorted(resultado["divergencias"],
@@ -137,6 +145,7 @@ def montar(resultado, recebiveis, movimentos):
             "gravidade": d["gravidade"],
             "gravidade_nome": NOMES_GRAVIDADE.get(d["gravidade"], d["gravidade"]),
             "data": data_da(d),
+            "arquivo": arquivo_da(d),
             "competencia": f"{d['competencia']:%m/%Y}",
             "esperado": _dinheiro(d["valor_esperado"]),
             "encontrado": _dinheiro(d["valor_encontrado"]),
@@ -157,6 +166,8 @@ def montar(resultado, recebiveis, movimentos):
             "bandeira": r.get("bandeira") or "",
             "valor_liquido": _dinheiro(r.get("valor_liquido")),
             "data_banco": data_br(m.get("data")),
+            "conta": m.get("arquivo", ""),
+            "agenda": r.get("arquivo", ""),
             "valor_deposito": _dinheiro(m.get("valor")),
             "historico": m.get("descricao") or "",
             "como": NOMES_COMO.get(c.get("como", ""), c.get("como", "")),
@@ -186,19 +197,62 @@ def montar(resultado, recebiveis, movimentos):
     }
 
 
+def ler_varios(arquivos, tipo):
+    """Le varios arquivos do mesmo tipo e junta tudo.
+
+    arquivos: lista de (caminho, nome). Cada registro ganha o nome do arquivo
+    de onde veio (pra mostrar em qual conta caiu cada deposito) e um id que
+    nao se repete entre arquivos.
+
+    Cada agenda vira um "estabelecimento" separado: a Stone e o vale-refeicao
+    pagam em depositos diferentes, entao o lote do dia de um nao se mistura
+    com o do outro.
+    """
+    todos, infos = [], []
+    letra = "a" if tipo == "recebiveis" else "e"
+    for n, (caminho, nome) in enumerate(arquivos, start=1):
+        registros, info = ler(caminho, tipo, nome)
+        for r in registros:
+            r["id"] = f"{letra}{n}-{r['id']}"
+            r["arquivo"] = info["nome"]
+            if tipo == "recebiveis" and not r.get("estabelecimento_id"):
+                r["estabelecimento_id"] = f"agenda-{n}"
+        todos.extend(registros)
+        infos.append(info)
+    return todos, infos
+
+
+def executar_varios(agendas, extratos, hoje=None):
+    """Concilia varias agendas (maquininha, vale-alimentacao...) contra varios
+    extratos (uma conta por arquivo). agendas e extratos: listas de
+    (caminho, nome)."""
+    if not agendas:
+        raise ArquivoComProblema("Falta a agenda de recebíveis.", "recebiveis", "")
+    if not extratos:
+        raise ArquivoComProblema("Falta o extrato do banco.", "extrato", "")
+    recebiveis, infos_agenda = ler_varios(agendas, "recebiveis")
+    movimentos, infos_extrato = ler_varios(extratos, "extrato")
+
+    resultado = conciliar(recebiveis=recebiveis, movimentos=movimentos, hoje=hoje)
+    dados = montar(resultado, recebiveis, movimentos)
+    dados["arquivos"] = {
+        "agendas": infos_agenda, "extratos": infos_extrato,
+        # o primeiro de cada, pra quem so usa um arquivo
+        "agenda": infos_agenda[0], "extrato": infos_extrato[0],
+    }
+    dados["gerado_em"] = data_br(hoje or date.today())
+    return {"dados": dados, "resultado": resultado,
+            "recebiveis": recebiveis, "movimentos": movimentos}
+
+
 def executar(caminho_agenda, caminho_extrato, nome_agenda=None, nome_extrato=None, hoje=None):
-    """Le os dois arquivos, concilia e devolve tudo pronto.
+    """Le uma agenda e um extrato, concilia e devolve tudo pronto.
 
     Devolve um dicionario com "dados" (pronto pra tela e pro Excel) e
     "resultado" (o que o motor devolveu, pro comando mostrar na tela).
     Levanta ArquivoComProblema se um dos arquivos nao servir.
     """
-    recebiveis, info_agenda = ler(caminho_agenda, "recebiveis", nome_agenda)
-    movimentos, info_extrato = ler(caminho_extrato, "extrato", nome_extrato)
-
-    resultado = conciliar(recebiveis=recebiveis, movimentos=movimentos, hoje=hoje)
-    dados = montar(resultado, recebiveis, movimentos)
-    dados["arquivos"] = {"agenda": info_agenda, "extrato": info_extrato}
-    dados["gerado_em"] = data_br(hoje or date.today())
-    return {"dados": dados, "resultado": resultado,
-            "recebiveis": recebiveis, "movimentos": movimentos}
+    return executar_varios(
+        [(caminho_agenda, nome_agenda or Path(caminho_agenda).name)],
+        [(caminho_extrato, nome_extrato or Path(caminho_extrato).name)],
+        hoje=hoje)

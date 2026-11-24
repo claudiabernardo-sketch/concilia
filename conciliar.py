@@ -17,7 +17,7 @@ from pathlib import Path
 
 from concilia import relatorio
 from concilia.formato import moeda
-from concilia.servico import ArquivoComProblema, executar
+from concilia.servico import ArquivoComProblema, executar_varios
 
 NOMES_TIPO = {
     "taxa_maior":        "Taxa cobrada a maior",
@@ -76,6 +76,10 @@ def main():
     analisador.add_argument("agenda", help="planilha da agenda de recebiveis (.xlsx ou .csv)")
     analisador.add_argument("extrato", help="planilha do extrato bancario (.xlsx ou .csv)")
     analisador.add_argument("-s", "--saida", help="onde gravar o relatorio (.xlsx)")
+    analisador.add_argument("--outra-agenda", action="append", default=[], metavar="ARQUIVO",
+                            help="mais uma agenda (ex.: vale-refeicao). Pode repetir.")
+    analisador.add_argument("--outro-extrato", action="append", default=[], metavar="ARQUIVO",
+                            help="extrato de mais uma conta. Pode repetir.")
     argumentos = analisador.parse_args()
 
     print("=" * 68)
@@ -84,7 +88,10 @@ def main():
     print("VERSAO DE TESTE: confira o relatorio antes de mandar para o cliente.")
 
     try:
-        tudo = executar(argumentos.agenda, argumentos.extrato)
+        agendas = [argumentos.agenda] + argumentos.outra_agenda
+        extratos = [argumentos.extrato] + argumentos.outro_extrato
+        tudo = executar_varios([(a, Path(a).name) for a in agendas],
+                               [(e, Path(e).name) for e in extratos])
     except ArquivoComProblema as e:
         print(f"\n{ROTULOS[e.tipo]}: {e.nome}")
         if e.colunas:
@@ -96,8 +103,10 @@ def main():
                  "(por exemplo 'Data prevista' e 'Valor liquido') e rode de novo.")
         erro(e.mensagem)
 
-    mostrar_leitura("recebiveis", tudo["dados"]["arquivos"]["agenda"])
-    mostrar_leitura("extrato", tudo["dados"]["arquivos"]["extrato"])
+    for info in tudo["dados"]["arquivos"]["agendas"]:
+        mostrar_leitura("recebiveis", info)
+    for info in tudo["dados"]["arquivos"]["extratos"]:
+        mostrar_leitura("extrato", info)
     mostrar_resultado(tudo["resultado"])
 
     saida = argumentos.saida or f"relatorio-{date.today():%Y-%m-%d}.xlsx"

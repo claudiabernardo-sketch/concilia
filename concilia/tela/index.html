@@ -64,8 +64,14 @@
   .soltar h2 { font-size: 17px; margin: 0 0 4px; color: var(--tinta); }
   .soltar .dica { margin: 0; color: var(--cinza); font-size: 14px; }
   .soltar .acao-arquivo { margin-top: 14px; font-size: 14px; font-weight: 600; color: var(--indigo); }
-  .arquivo-nome { margin-top: 12px; font-weight: 600; color: var(--tinta); word-break: break-all; font-size: 14.5px; }
-  .arquivo-info { font-size: 13px; color: var(--cinza); }
+  .mais-de-um { margin: 10px 0 0; font-size: 12.5px; color: var(--cinza-claro); max-width: 340px; }
+  .lista-arquivos { list-style: none; margin: 12px 0 0; padding: 0; width: 100%; max-width: 360px; display: grid; gap: 6px; }
+  .lista-arquivos li { display: flex; align-items: center; gap: 8px; background: #fff; border: 1px solid var(--borda); border-radius: 10px; padding: 7px 8px 7px 12px; text-align: left; }
+  .lista-arquivos .nome { flex: 1; min-width: 0; font-weight: 600; color: var(--tinta); font-size: 13.5px; overflow: hidden; text-overflow: ellipsis; white-space: nowrap; }
+  .lista-arquivos .tam { color: var(--cinza); font-size: 12px; white-space: nowrap; }
+  .remover { border: 0; background: var(--fundo); color: var(--cinza); width: 26px; height: 26px; border-radius: 8px; display: grid; place-items: center; flex: none; }
+  .remover:hover { background: var(--vermelho-claro); color: var(--vermelho); }
+  .arquivo-info { font-size: 13px; color: var(--indigo-escuro); font-weight: 600; margin-top: 8px; }
   .soltar input { position: absolute; width: 1px; height: 1px; opacity: 0; pointer-events: none; }
 
   .acoes-inicio { display: flex; flex-direction: column; align-items: center; gap: 12px; margin-top: 26px; }
@@ -225,31 +231,33 @@
   <section id="inicio">
     <div class="heroi">
       <h1>A maquininha pagou <span>o que prometeu?</span></h1>
-      <p>Arraste a agenda de recebíveis e o extrato do banco. Em segundos você vê o que bateu e o que precisa da sua atenção.</p>
+      <p>Arraste a agenda de recebíveis e o extrato do banco. Pode pôr mais de um de cada. Em segundos você vê o que bateu e o que precisa da sua atenção.</p>
     </div>
 
     <div id="erro" class="aviso-erro escondido" role="alert"></div>
 
     <div class="soltar-grade">
-      <label class="soltar" id="soltar-agenda" tabindex="0">
+      <div class="soltar" id="soltar-agenda" tabindex="0" role="button" aria-label="Escolher a agenda de recebíveis">
         <span class="passo">1</span>
         <div class="soltar-icone"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20M6 15h4"/></svg></div>
         <h2>Agenda de recebíveis</h2>
         <p class="dica">Excel ou CSV baixado no portal da maquininha</p>
         <div class="vazio-arquivo"><div class="acao-arquivo">Arraste aqui ou clique para escolher</div></div>
-        <div class="tem-arquivo escondido"><div class="arquivo-nome"></div><div class="arquivo-info"></div></div>
-        <input type="file" accept=".xlsx,.xlsm,.csv,.txt" aria-label="Escolher a agenda de recebíveis">
-      </label>
+        <div class="tem-arquivo escondido"><ul class="lista-arquivos"></ul><div class="arquivo-info"></div></div>
+        <p class="mais-de-um">Tem vale-alimentação (VR, Alelo, Ticket)? Ponha a agenda de cada um aqui também.</p>
+        <input type="file" accept=".xlsx,.xlsm,.csv,.txt" multiple aria-label="Escolher a agenda de recebíveis" tabindex="-1">
+      </div>
 
-      <label class="soltar" id="soltar-extrato" tabindex="0">
+      <div class="soltar" id="soltar-extrato" tabindex="0" role="button" aria-label="Escolher o extrato do banco">
         <span class="passo">2</span>
         <div class="soltar-icone"><svg width="28" height="28" viewBox="0 0 24 24" fill="none" stroke="currentColor" stroke-width="2" stroke-linecap="round" stroke-linejoin="round"><path d="M3 21h18M5 21V10M19 21V10M9.5 21v-7M14.5 21v-7M2 10l10-6 10 6"/></svg></div>
         <h2>Extrato do banco</h2>
         <p class="dica">Excel ou CSV do mesmo período</p>
         <div class="vazio-arquivo"><div class="acao-arquivo">Arraste aqui ou clique para escolher</div></div>
-        <div class="tem-arquivo escondido"><div class="arquivo-nome"></div><div class="arquivo-info"></div></div>
-        <input type="file" accept=".xlsx,.xlsm,.csv,.txt" aria-label="Escolher o extrato do banco">
-      </label>
+        <div class="tem-arquivo escondido"><ul class="lista-arquivos"></ul><div class="arquivo-info"></div></div>
+        <p class="mais-de-um">Recebe em mais de uma conta? Ponha um extrato de cada conta.</p>
+        <input type="file" accept=".xlsx,.xlsm,.csv,.txt" multiple aria-label="Escolher o extrato do banco" tabindex="-1">
+      </div>
     </div>
 
     <div class="acoes-inicio">
@@ -331,7 +339,9 @@
 (function () {
   "use strict";
   var CHAVE = "__CHAVE__";
-  var arquivos = { agenda: null, extrato: null };
+  var arquivos = { agenda: [], extrato: [] };
+  var MAXIMO = 12;
+  var iconeOriginal = {};
   var dados = null;
   var filtroAtual = "todos";
 
@@ -371,11 +381,27 @@
     window.scrollTo({ top: 0, behavior: "smooth" });
   }
 
-  // ---------- Escolher arquivos ----------
+  // ---------- Escolher arquivos (pode mais de um em cada quadro) ----------
   function prepararCaixa(campo) {
     var caixa = $("soltar-" + campo);
     var entrada = caixa.querySelector("input");
-    entrada.addEventListener("change", function () { if (entrada.files[0]) escolher(campo, entrada.files[0]); });
+    iconeOriginal[campo] = caixa.querySelector(".soltar-icone").innerHTML;
+    entrada.addEventListener("change", function () {
+      if (entrada.files.length) escolher(campo, Array.prototype.slice.call(entrada.files));
+      entrada.value = "";
+    });
+    caixa.addEventListener("click", function (e) {
+      var botao = e.target.closest(".remover");
+      if (botao) {
+        e.preventDefault();
+        e.stopPropagation();
+        arquivos[campo].splice(Number(botao.getAttribute("data-i")), 1);
+        desenharCaixa(campo);
+        return;
+      }
+      if (e.target === entrada) return;
+      entrada.click();
+    });
     caixa.addEventListener("keydown", function (e) { if (e.key === "Enter" || e.key === " ") { e.preventDefault(); entrada.click(); } });
     ["dragenter", "dragover"].forEach(function (ev) {
       caixa.addEventListener(ev, function (e) { e.preventDefault(); caixa.classList.add("arrastando"); });
@@ -384,22 +410,34 @@
       caixa.addEventListener(ev, function (e) { e.preventDefault(); caixa.classList.remove("arrastando"); });
     });
     caixa.addEventListener("drop", function (e) {
-      var f = e.dataTransfer && e.dataTransfer.files && e.dataTransfer.files[0];
-      if (f) escolher(campo, f);
+      var fs = e.dataTransfer && e.dataTransfer.files;
+      if (fs && fs.length) escolher(campo, Array.prototype.slice.call(fs));
     });
   }
-  function escolher(campo, arquivo) {
-    arquivos[campo] = arquivo;
-    var caixa = $("soltar-" + campo);
-    caixa.classList.add("pronto");
-    caixa.classList.remove("com-erro");
-    caixa.querySelector(".vazio-arquivo").classList.add("escondido");
-    caixa.querySelector(".tem-arquivo").classList.remove("escondido");
-    caixa.querySelector(".arquivo-nome").textContent = arquivo.name;
-    caixa.querySelector(".arquivo-info").textContent = tamanho(arquivo.size) + " · clique para trocar";
-    caixa.querySelector(".soltar-icone").innerHTML = svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 28);
-    $("botao-conciliar").disabled = !(arquivos.agenda && arquivos.extrato);
+  function escolher(campo, lista) {
+    lista.forEach(function (f) {
+      var repetido = arquivos[campo].some(function (x) { return x.name === f.name && x.size === f.size && x.lastModified === f.lastModified; });
+      if (!repetido && arquivos[campo].length < MAXIMO) arquivos[campo].push(f);
+    });
     $("erro").classList.add("escondido");
+    desenharCaixa(campo);
+  }
+  function desenharCaixa(campo) {
+    var caixa = $("soltar-" + campo);
+    var lista = arquivos[campo];
+    var tem = lista.length > 0;
+    caixa.classList.toggle("pronto", tem);
+    caixa.classList.remove("com-erro");
+    caixa.querySelector(".vazio-arquivo").classList.toggle("escondido", tem);
+    caixa.querySelector(".tem-arquivo").classList.toggle("escondido", !tem);
+    caixa.querySelector(".soltar-icone").innerHTML = tem ? svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 28) : iconeOriginal[campo];
+    caixa.querySelector(".lista-arquivos").innerHTML = lista.map(function (f, i) {
+      return '<li><span class="nome" title="' + esc(f.name) + '">' + esc(f.name) + '</span><span class="tam">' + tamanho(f.size) +
+        '</span><button type="button" class="remover" data-i="' + i + '" aria-label="Tirar ' + esc(f.name) + '" title="Tirar este arquivo">' +
+        svg('<path d="M6 6l12 12M18 6L6 18"/>', 14) + "</button></li>";
+    }).join("");
+    caixa.querySelector(".arquivo-info").textContent = lista.length >= MAXIMO ? "Limite de " + MAXIMO + " arquivos" : "+ clique ou arraste para pôr mais um";
+    $("botao-conciliar").disabled = !(arquivos.agenda.length && arquivos.extrato.length);
   }
   window.addEventListener("dragover", function (e) { e.preventDefault(); });
   window.addEventListener("drop", function (e) { e.preventDefault(); });
@@ -431,11 +469,13 @@
     });
   }
   $("botao-conciliar").addEventListener("click", function () {
-    Promise.all([lerBase64(arquivos.agenda), lerBase64(arquivos.extrato)]).then(function (c) {
-      enviar("/conciliar", {
-        agenda: { nome: arquivos.agenda.name, conteudo: c[0] },
-        extrato: { nome: arquivos.extrato.name, conteudo: c[1] }
-      });
+    function pacote(lista) {
+      return Promise.all(lista.map(function (f) {
+        return lerBase64(f).then(function (c) { return { nome: f.name, conteudo: c }; });
+      }));
+    }
+    Promise.all([pacote(arquivos.agenda), pacote(arquivos.extrato)]).then(function (p) {
+      enviar("/conciliar", { agendas: p[0], extratos: p[1] });
     }).catch(function (e) { mostrarErro({ erro: e.message }); });
   });
   $("botao-exemplo").addEventListener("click", function () { enviar("/exemplo", {}); });
@@ -457,6 +497,11 @@
       caixaErro.classList.add("com-erro");
       caixaErro.classList.remove("pronto");
       caixaErro.querySelector(".soltar-icone").innerHTML = svg('<circle cx="12" cy="12" r="9"/><path d="M12 7.5v5.5M12 16.5v.5"/>', 28);
+      if (res.nome) {
+        Array.prototype.forEach.call(caixaErro.querySelectorAll(".lista-arquivos li"), function (li) {
+          if (li.querySelector(".nome").textContent === res.nome) { li.style.borderColor = "#FCA5A5"; li.style.background = "#FEF2F2"; }
+        });
+      }
     }
   }
 
@@ -468,9 +513,13 @@
     $("botao-excel").href = d.relatorio.url;
     $("botao-excel").setAttribute("download", d.relatorio.nome);
 
+    var agendas = d.arquivos.agendas || [d.arquivos.agenda];
+    var extratos = d.arquivos.extratos || [d.arquivos.extrato];
+    dados.variasAgendas = agendas.length > 1;
+    dados.variosExtratos = extratos.length > 1;
     $("arquivos-usados").innerHTML =
-      "<span>" + svg('<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>', 15) + esc(d.arquivos.agenda.nome) + "</span>" +
-      "<span>" + svg('<path d="M3 21h18M5 21V10M19 21V10M2 10l10-6 10 6"/>', 15) + esc(d.arquivos.extrato.nome) + "</span>";
+      agendas.map(function (i) { return "<span>" + svg('<rect x="2" y="5" width="20" height="14" rx="2.5"/><path d="M2 10h20"/>', 15) + esc(i.nome) + "</span>"; }).join("") +
+      extratos.map(function (i) { return "<span>" + svg('<path d="M3 21h18M5 21V10M19 21V10M2 10l10-6 10 6"/>', 15) + esc(i.nome) + "</span>"; }).join("");
 
     var faixa = $("faixa-status");
     if (r.atencao === 0) {
@@ -500,7 +549,9 @@
         '</div><div class="tipo-barra"><div style="width:' + w + "%;background:" + c.cor + '"></div></div></div>';
     }).join("") : '<div class="vazio">' + svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 30) + "<b>Nenhum dinheiro em jogo</b>Tudo bateu.</div>";
 
-    $("entendi").innerHTML = mapa("Agenda de recebíveis", d.arquivos.agenda) + mapa("Extrato do banco", d.arquivos.extrato);
+    $("entendi").innerHTML =
+      agendas.map(function (i) { return mapa(agendas.length > 1 ? "Agenda · " + i.nome : "Agenda de recebíveis", i); }).join("") +
+      extratos.map(function (i) { return mapa(extratos.length > 1 ? "Extrato · " + i.nome : "Extrato do banco", i); }).join("");
 
     $("conta-atencao").textContent = d.divergencias.length;
     $("conta-conciliados").textContent = d.conciliados.length;
@@ -518,7 +569,7 @@
   }
   function mapa(titulo, info) {
     var ign = info.ignoradas ? ", " + info.ignoradas + " ignoradas" : "";
-    return "<div><h3>" + esc(titulo) + "<small>" + info.linhas + " linhas lidas" + ign + "</small></h3><div class='mapa'>" +
+    return "<div><h3>" + esc(titulo) + "<small>" + info.linhas + (info.linhas === 1 ? " linha lida" : " linhas lidas") + ign + "</small></h3><div class='mapa'>" +
       info.colunas_tela.map(function (p) {
         return "<span class='campo'>" + esc(p[0]) + "</span><span class='coluna' title='" + esc(p[1]) + "'>← " + esc(p[1]) + "</span>";
       }).join("") + "</div></div>";
@@ -548,6 +599,7 @@
       var meta = ["Data " + esc(d.data)];
       if (d.esperado != null) meta.push("Esperado " + reais(d.esperado));
       if (d.encontrado != null) meta.push("Encontrado " + reais(d.encontrado));
+      if ((dados.variasAgendas || dados.variosExtratos) && d.arquivo) meta.push("Arquivo: " + esc(d.arquivo));
       return '<div class="problema"><div class="problema-icone" style="background:' + c.fundo + ";color:" + c.cor + '">' + svg(ICONES[d.tipo] || ICONES.nao_recebido) +
         '</div><div><div class="problema-titulo">' + esc(d.nome) + ' <span class="gravidade g-' + esc(d.gravidade) + '">' + esc(d.gravidade_nome) +
         '</span></div><div class="problema-obs">' + esc(d.observacao) + '</div><div class="problema-meta">' + meta.map(function (m) { return "<span>" + m + "</span>"; }).join("") +
@@ -560,11 +612,14 @@
       $("tabela-conciliados").innerHTML = '<div class="vazio"><b>Nada foi conciliado</b>Confira se a agenda e o extrato são do mesmo período e da mesma conta.</div>';
       return;
     }
-    $("tabela-conciliados").innerHTML = "<table><thead><tr><th>Data prevista</th><th>Modalidade</th><th>Bandeira</th><th class='num'>Valor líquido</th><th>Caiu no banco</th><th class='num'>Depósito</th><th>Histórico do banco</th><th>Como casou</th></tr></thead><tbody>" +
+    var comConta = dados.variosExtratos, comAgenda = dados.variasAgendas;
+    $("tabela-conciliados").innerHTML = "<table><thead><tr><th>Data prevista</th><th>Modalidade</th><th>Bandeira</th><th class='num'>Valor líquido</th><th>Caiu no banco</th><th class='num'>Depósito</th>" +
+      (comConta ? "<th>Conta</th>" : "") + "<th>Histórico do banco</th><th>Como casou</th>" + (comAgenda ? "<th>Agenda</th>" : "") + "</tr></thead><tbody>" +
       dados.conciliados.map(function (c) {
         return "<tr><td>" + esc(c.data_prevista) + "</td><td>" + esc(c.modalidade || "-") + "</td><td>" + esc(c.bandeira || "-") + "</td><td class='num'>" + reais(c.valor_liquido) +
-          "</td><td>" + esc(c.data_banco) + "</td><td class='num'>" + reais(c.valor_deposito) + "</td><td class='quebra'>" + esc(c.historico || "-") + "</td><td><span class='como-casou'>" +
-          svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 13) + esc(c.como) + "</span></td></tr>";
+          "</td><td>" + esc(c.data_banco) + "</td><td class='num'>" + reais(c.valor_deposito) + "</td>" + (comConta ? "<td class='quebra'>" + esc(c.conta || "-") + "</td>" : "") +
+          "<td class='quebra'>" + esc(c.historico || "-") + "</td><td><span class='como-casou'>" +
+          svg('<path d="M5 12.5l4.5 4.5L19 7.5"/>', 13) + esc(c.como) + "</span></td>" + (comAgenda ? "<td class='quebra'>" + esc(c.agenda || "-") + "</td>" : "") + "</tr>";
       }).join("") + "</tbody></table>";
   }
   function trocarAba(qual) {
